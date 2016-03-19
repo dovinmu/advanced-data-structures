@@ -1,1 +1,1 @@
-I'm following along with the MIT Opencourseware course Advanced Data Structures, which can be found here: .
+I'm following along with the MIT Opencourseware course Advanced Data Structures, which can be found here: http://ocw.mit.edu/courses/electrical-engineering-and-computer-science/6-851-advanced-data-structures-spring-2012/.
