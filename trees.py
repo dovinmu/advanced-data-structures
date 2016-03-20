@@ -208,20 +208,20 @@ class SplayTree(BinarySearchTree):
 
     def splay(self, node):
         while node.parent:
-            print('depth:', self.height(node))
+            #print('depth:', self.height(node))
             if node.parent.parent is None:
                 #zig step
                 node.rotate()
-                print('zig')
+                #print('zig')
             elif (node.isLeft(node.parent) and node.parent.isLeft(node.parent.parent)) or (node.isRight(node.parent) and node.parent.isRight(node.parent.parent)):
                 #zig-zig step
                 node.parent.rotate()
                 node.rotate()
-                print('zig-zig')
+                #print('zig-zig')
             else:
                 node.rotate()
                 node.rotate()
-                print('zig-zag')
+                #print('zig-zag')
         self.root = node
 
 class RangeTree(BinarySearchTree):
@@ -261,9 +261,25 @@ Dynamic Optimality (aka O(1)-competitive): we want for the total cost
    O(loglogn). Splay trees might be dynamically optimal, but we don't know.
 '''
 
-def treeRace(array):
+def treeCompare(load_seq, access_seq):
+    tree_dict = {'BST':BinarySearchTree(), 'SplayTree':SplayTree()}
+    for name,tree in tree_dict.items():
+        for item in load_seq:
+            tree.insert(item)
+    for name,tree in tree_dict.items():
+        t0 = time.time()
+        for item in access_seq:
+            tree.search(item)
+        t1 = time.time()
+        print("{0} took {1} seconds".format(name, int((t1-t0)*1000)/1000))
+
+def treeRace():
     #TODO: compare the speed of each tree for lots of access sequences on the given data
-    pass
+    std_random = np.random.randn(1000)
+    print("1000 std deviation random numbers, same order load / access")
+    treeCompare(std_random, std_random)
+    print("1000 std deviation random numbers, random load / sorted access")
+    treeCompare(std_random, sorted(std_random))
 
 #bst = BinarySearchTree()
 bst = SplayTree()
