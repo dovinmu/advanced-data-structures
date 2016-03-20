@@ -225,20 +225,19 @@ class SplayTree(BinarySearchTree):
 
     def splay(self, node):
         while node.parent:
-            #print('depth:', self.height(node))
+            print('depth:', self.height(node))
+            time.sleep(1)
             if node.parent.parent is None:
-                #zig step
                 node.rotate()
-                #print('zig')
+                print('zig')
             elif (node.isLeft(node.parent) and node.parent.isLeft(node.parent.parent)) or (node.isRight(node.parent) and node.parent.isRight(node.parent.parent)):
-                #zig-zig step
                 node.parent.rotate()
                 node.rotate()
-                #print('zig-zig')
+                print('zig-zig')
             else:
                 node.rotate()
                 node.rotate()
-                #print('zig-zag')
+                print('zig-zag')
         self.root = node
 
 class RangeTree(BinarySearchTree):
@@ -293,7 +292,7 @@ def treeCompare(load_seq, access_seq):
 
 def treeRace():
     #TODO: compare the speed of each tree for lots of access sequences on the given data
-    n = 100
+    n = 10000
     m = 100
 
     bst = BinarySearchTree()
@@ -311,6 +310,7 @@ def treeRace():
     import matplotlib.pyplot as plt
     splay_series = Series()
     bst_series = Series()
+    bst2_series = Series()
     i = 0
     t0 = time.time()
     for num in seq[:int(len(seq)/m)]*m:
@@ -320,20 +320,32 @@ def treeRace():
         i += 1
     t1 = time.time()
     i = 0
+    rootkey = bst.root.key
     for num in seq[:int(len(seq)/m)]*m:
-        splay_depth = splay.depth(num)
-        splay_series.set_value(i, splay_depth)
-        splay.search(num)
+        bst_depth = bst.depth(rootkey)
+        bst2_series.set_value(i, bst_depth)
+        bst.search(rootkey)
         i += 1
+
+    '''
+    rootkey = splay.root.key
+    for num in seq[:int(len(seq)/m)]*m:
+        splay_depth = splay.depth(rootkey)
+        splay_series.set_value(i, splay_depth)
+        splay.search(rootkey)
+        i += 1
+    '''
     t2 = time.time()
 #    print('BST depth of {0}: {1}'.format(num, bst_depth))
 #    print('splay depth of {0}: {1}'.format(num, splay_depth))
 #    print('')
     bst_series.plot(alpha=0.2)
-    splay_series.plot(alpha=0.2)
+    bst2_series.plot(alpha=0.2)
+    #splay_series.plot(alpha=0.2)
     bst_series.ewm(span=int(n/100)).mean().plot(style='g--')
-    splay_series.ewm(span=int(n/100)).mean().plot(style='r--')
-    plt.title("BST time: {0}  Splay time: {1}".format(int((t1-t0)*1000)/1000,int((t2-t1)*1000)/1000))
+    bst2_series.ewm(span=int(n/100)).mean().plot(style='k--')
+    #splay_series.ewm(span=int(n/100)).mean().plot(style='r--')
+    plt.title("BST time: {0}  BST (root only) time: {1}".format(int((t1-t0)*1000)/1000,int((t2-t1)*1000)/1000))
     plt.show()
     '''
     uniform_rand = [random.random() for i in range(n)]
