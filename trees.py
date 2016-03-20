@@ -1,4 +1,5 @@
 import time
+import numpy as np
 
 class BinaryTreeNode(object):
     def __init__(self, key, val=True, left=None, right=None, parent=None):
@@ -280,6 +281,8 @@ def treeRace():
     treeCompare(std_random, std_random)
     print("1000 std deviation random numbers, random load / sorted access")
     treeCompare(std_random, sorted(std_random))
+    print("1000 std deviation random numbers, random load / subset access")
+    treeCompare(std_random, std_random[:100]*10)
 
 #bst = BinarySearchTree()
 bst = SplayTree()
