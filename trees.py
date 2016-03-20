@@ -169,9 +169,12 @@ class BinarySearchTree(BinaryTree):
     def search(self, key):
         if self.root is None:
             return None
-        return self.searchRecursively(key, self.root)
+        node = self.searchRecursively(key, self.root)
+        #print('got', node)
+        return node
 
     def searchRecursively(self, key, node):
+        #print('hit key ', node.key)
         if key == node.key:
             return node
         if key > node.key and node.right:
@@ -225,19 +228,19 @@ class SplayTree(BinarySearchTree):
 
     def splay(self, node):
         while node.parent:
-            print('depth:', self.height(node))
+            print('height:', self.height(node))
             time.sleep(1)
             if node.parent.parent is None:
                 node.rotate()
-                print('zig')
+                #print('zig')
             elif (node.isLeft(node.parent) and node.parent.isLeft(node.parent.parent)) or (node.isRight(node.parent) and node.parent.isRight(node.parent.parent)):
                 node.parent.rotate()
                 node.rotate()
-                print('zig-zig')
+                #print('zig-zig')
             else:
                 node.rotate()
                 node.rotate()
-                print('zig-zag')
+                #print('zig-zag')
         self.root = node
 
 class RangeTree(BinarySearchTree):
@@ -292,8 +295,8 @@ def treeCompare(load_seq, access_seq):
 
 def treeRace():
     #TODO: compare the speed of each tree for lots of access sequences on the given data
-    n = 10000
-    m = 100
+    n = 1000
+    m = 1
 
     bst = BinarySearchTree()
     splay = SplayTree()
@@ -304,7 +307,8 @@ def treeRace():
         bst.insert(num)
         splay.insert(num)
     #print(bst)
-    print('Racing Splay Tree vs Binary Search Tree (unbalanced, but randomly built) on access times for a reapeating subset of 1/{} of {}k total inserted elements.'.format(m, int(n/1000)))
+    print('Racing Splay Tree vs Binary Search Tree (unbalanced, but randomly built) on access times for a reapeating subset of 1/{} of {}k total inserted elements.'.format(m, int(n/100)/10))
+    print(bst)
     np.random.shuffle(seq)
     from pandas import Series
     import matplotlib.pyplot as plt
@@ -315,17 +319,23 @@ def treeRace():
     t0 = time.time()
     for num in seq[:int(len(seq)/m)]*m:
         bst_depth = bst.depth(num)
+        #bst_depth = bst.depth(random_key)
         bst_series.set_value(i, bst_depth)
         bst.search(num)
+        #bst.search(random_key)
         i += 1
     t1 = time.time()
     i = 0
-    rootkey = bst.root.key
+    print('random key on splay tree')
+    random_key = seq[0]
+    print('random key:', random_key)
+    bst_depth = bst.depth(random_key)
+    print('depth:', bst_depth)
     for num in seq[:int(len(seq)/m)]*m:
-        bst_depth = bst.depth(rootkey)
-        bst2_series.set_value(i, bst_depth)
-        bst.search(rootkey)
-        i += 1
+        splay_depth = splay.depth(random_key)
+        splay_series.set_value(i, splay_depth)
+        splay.search(random_key)
+    i += 1
 
     '''
     rootkey = splay.root.key
@@ -340,12 +350,12 @@ def treeRace():
 #    print('splay depth of {0}: {1}'.format(num, splay_depth))
 #    print('')
     bst_series.plot(alpha=0.2)
-    bst2_series.plot(alpha=0.2)
+    splay_series.plot(alpha=0.2)
     #splay_series.plot(alpha=0.2)
-    bst_series.ewm(span=int(n/100)).mean().plot(style='g--')
-    bst2_series.ewm(span=int(n/100)).mean().plot(style='k--')
+    bst_series.ewm(span=int(n/m)).mean().plot(style='g--')
+    splay_series.ewm(span=int(n/m)).mean().plot(style='k--')
     #splay_series.ewm(span=int(n/100)).mean().plot(style='r--')
-    plt.title("BST time: {0}  BST (root only) time: {1}".format(int((t1-t0)*1000)/1000,int((t2-t1)*1000)/1000))
+    plt.title("BST time: {0}  Splay tree (root only) time: {1}".format(int((t1-t0)*1000)/1000,int((t2-t1)*1000)/1000))
     plt.show()
     '''
     uniform_rand = [random.random() for i in range(n)]
@@ -362,6 +372,7 @@ def treeRace():
     treeCompare(load, uniform_rand * 5)
     '''
 treeRace()
+
 '''
 #interesting attempt to print tree structure
 #check out http://blog.mikedll.com/2011/04/red-black-trees-in-python.html
