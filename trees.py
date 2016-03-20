@@ -1,3 +1,5 @@
+import time
+
 class BinaryTreeNode(object):
     def __init__(self, key, val=True, left=None, right=None, parent=None):
         self.key = key
@@ -19,6 +21,12 @@ class BinaryTreeNode(object):
         self.right = node
         if node:
             node.parent = self
+
+    def isLeft(self, node):
+        return node and node.left == self
+
+    def isRight(self, node):
+        return node and node.right == self
 
     def rotate(self):
         if self.parent is None:
@@ -63,7 +71,8 @@ class BinaryTreeNode(object):
 
 
     def __repr__(self, level=0):
-        '''Print tree structure (needs work)'''
+        return str(self.key)
+        '''Print tree structure (needs work)
         left = self.left.__repr__(level) if self.left else ''
         right = self.right.__repr__(level+1) if self.right else ''
         left = left.split('\n')
@@ -78,14 +87,17 @@ class BinaryTreeNode(object):
                 combined += right.pop(0) + ' '
             combined += '\n'
         return str('{0}\n|\\\n{1}'.format(self.key, combined))
+        '''
 
 class Tree(object):
     def __init__(self):
         self.root = None
 
 class BinaryTree(Tree):
-    def depth(self):
-        leaves = [self.root]
+    def height(self, node=None):
+        if not node:
+            node = self.root
+        leaves = [node]
         level = 0
         while len(leaves) > 0:
             new_leaves = []
@@ -96,6 +108,29 @@ class BinaryTree(Tree):
             level += 1
             leaves = new_leaves
         return level
+
+    def checkPointers(self):
+        seen = {}
+        leaves = [self.root]
+        while leaves:
+            new_leaves = []
+            for leaf in leaves:
+                if leaf.left:
+                    if leaf.right in seen:
+                        print('Multiple parents: {0}->{1}'.format(leaf.key, leaf.left.key))
+                    else:
+                        new_leaves.append(leaf.left)
+                    if leaf.left.parent != leaf:
+                        print('erroneous back-pointer:{0}->{1}'.format(leaf.key, leaf.left.key))
+                if leaf.right:
+                    if leaf.right in seen:
+                        print('Multiple parents: {0}->{1}'.format(leaf.key, leaf.left.key))
+                    else:
+                        new_leaves.append(leaf.right)
+                    if leaf.right.parent != leaf:
+                        print('erroneous back-pointer:{0}->{1}'.format(leaf.key, leaf.right.key))
+                seen[leaf] = True
+            leaves = new_leaves
 
 class BinarySearchTree(BinaryTree):
     def insert(self, key, val=True):
@@ -152,16 +187,48 @@ class BinarySearchTree(BinaryTree):
         return ret
 
 class SplayTree(BinarySearchTree):
-    def search(self, x):
-        #accessing a node x brings it to the root
-        pass
+    '''In a splay tree, accessing a node x of a BST brings it to the root.
+       Thus, recently accessed items are quick to access again.
+       Insertion, look-up and removal are O(logn) amortized. For sequences
+       of non-random operations, splay trees perform better than normal BSTs.
+    '''
+    def search(self, key):
+        node = BinarySearchTree.search(self, key)
+        self.splay(node)
+        return node
+
+    def splay(self, node):
+        while node.parent:
+            print('depth:', self.height(node))
+            if node.parent.parent is None:
+                #zig step
+                node.rotate()
+                print('zig')
+            elif (node.isLeft(node.parent) and node.parent.isLeft(node.parent.parent)) or (node.isRight(node.parent) and node.parent.isRight(node.parent.parent)):
+                #zig-zig step
+                node.parent.rotate()
+                node.rotate()
+                print('zig-zig')
+            else:
+                node.rotate()
+                node.rotate()
+                print('zig-zag')
+        self.root = node
+
 class RangeTree(object):
     pass
 
-bst = BinarySearchTree()
-bst.insert(1)
-bst.insert(2)
-bst.insert(0)
+#bst = BinarySearchTree()
+bst = SplayTree()
 bst.insert(3)
+bst.insert(10)
 bst.insert(4)
+bst.insert(2)
+bst.insert(1)
+bst.insert(16)
 bst.insert(6)
+bst.insert(2.5)
+bst.insert(0.5)
+bst.insert(4.5)
+bst.insert(0)
+print(bst)
