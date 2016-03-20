@@ -295,8 +295,11 @@ def treeRace():
     print("{} uniform random nums, shuffled access".format(n))
     np.random.shuffle(uniform_rand)
     treeCompare(load, uniform_rand)
-    #print("1000 std deviation random numbers, random load / subset access")
-    #treeCompare(std_random, std_random[:100]*10)
+
+    #This should be what a splay tree is the best at!
+    uniform_rand = [num for num in uniform_rand if num < 0.2]
+    print("{} uniform random numbers, random load / subset access (<.2)".format(n))
+    treeCompare(load, uniform_rand * 5)
 
 #bst = BinarySearchTree()
 bst = SplayTree()
