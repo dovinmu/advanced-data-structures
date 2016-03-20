@@ -186,11 +186,20 @@ class BinarySearchTree(BinaryTree):
             ret += self.stringify(node.right, level+1)
         return ret
 
+#challenge: given x, cut a tree into two red-black trees with one
+#tree's values < x and one trees's values > x
+class RedBlackTree(BinarySearchTree):
+    '''
+    '''
+    pass
+
 class SplayTree(BinarySearchTree):
     '''In a splay tree, accessing a node x of a BST brings it to the root.
        Thus, recently accessed items are quick to access again.
        Insertion, look-up and removal are O(logn) amortized. For sequences
        of non-random operations, splay trees perform better than normal BSTs.
+
+       Conjectured to be dynamically optimal
     '''
     def search(self, key):
         node = BinarySearchTree.search(self, key)
@@ -215,10 +224,45 @@ class SplayTree(BinarySearchTree):
                 print('zig-zag')
         self.root = node
 
-class RangeTree(object):
+class RangeTree(BinarySearchTree):
     '''
     A range tree on a set of 1-dimensional points is a balanced binary search tree on those points. The points stored in the tree are stored in the leaves of the tree; each internal node stores the largest value contained in its left subtree. A range tree on a set of points in d-dimensions is a recursively defined multi-level binary search tree. Each level of the data structure is a binary search tree on one of the d-dimensions. The first level is a binary search tree on the first of the d-coordinates. Each vertex v of this tree contains an associated structure that is a (d−1)-dimensional range tree on the last (d−1)-coordinates of the points stored in the subtree of v.
     '''
+    def __init__(d):
+        raise NotImplementedError()
+
+
+class TangoTree(BinarySearchTree):
+    '''
+    The basic idea of a Tango Tree is to store "preferred child" paths,
+    where each node stores its most recently accessed child as the
+    preferred child. These paths can be stored as auxiliary BBSTs
+    sorted by the original keys.
+    '''
+    pass
+
+
+'''
+___Various properties to care about___
+Sequential Access property:
+Dynamic Finger:
+Working set property:
+Unified property: attempts to unify Dynamic Finger and Working Set.
+   if t_ij distinct keys accessed in x_i, ..., x_j then x_j costs
+   O(lg min_i [|x_i - x_j| + t_ij + 2])
+   What we want to find is to find a key that minimizes both being
+   in the recent past and close in space. Think about it like growing
+   a box outwards from the staring location in space and time.
+   This can be achieved with a pointer machine DS, but we don't know
+   how to do it with a BST.
+Dynamic Optimality (aka O(1)-competitive): we want for the total cost
+   to be within the same order as the optimal solution, i.e. that if the
+   cost is O(1) when we know the future then the cost is O(1) when we don't. All BBSTs are O(logn)-competitive, and we know how to do
+   O(loglogn). Splay trees might be dynamically optimal, but we don't know.
+'''
+
+def treeRace(array):
+    #TODO: compare the speed of each tree for lots of access sequences on the given data
     pass
 
 #bst = BinarySearchTree()
