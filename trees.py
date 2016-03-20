@@ -1,5 +1,6 @@
 import time
 import numpy as np
+import random
 
 class BinaryTreeNode(object):
     def __init__(self, key, val=True, left=None, right=None, parent=None):
@@ -272,17 +273,30 @@ def treeCompare(load_seq, access_seq):
         for item in access_seq:
             tree.search(item)
         t1 = time.time()
-        print("{0} took {1} seconds".format(name, int((t1-t0)*1000)/1000))
+        print("{0} took {1} seconds. Height: {2}".format(name, int((t1-t0)*1000)/1000, tree.height()))
 
 def treeRace():
     #TODO: compare the speed of each tree for lots of access sequences on the given data
-    std_random = np.random.randn(1000)
-    print("1000 std deviation random numbers, same order load / access")
-    treeCompare(std_random, std_random)
-    print("1000 std deviation random numbers, random load / sorted access")
-    treeCompare(std_random, sorted(std_random))
-    print("1000 std deviation random numbers, random load / subset access")
-    treeCompare(std_random, std_random[:100]*10)
+    n = 10000
+    std_random = np.random.randn(n)
+    load = np.copy(std_random)
+    print("{} std dev random nums, sorted access".format(n))
+    treeCompare(load, sorted(std_random))
+    print("{} std dev random nums, shuffled access".format(n))
+    np.random.shuffle(std_random)
+    treeCompare(load, std_random)
+
+    print('\n')
+
+    uniform_rand = [random.random() for i in range(n)]
+    load = np.copy(uniform_rand)
+    print("{} uniform random nums, sorted access".format(n))
+    treeCompare(load, sorted(uniform_rand))
+    print("{} uniform random nums, shuffled access".format(n))
+    np.random.shuffle(uniform_rand)
+    treeCompare(load, uniform_rand)
+    #print("1000 std deviation random numbers, random load / subset access")
+    #treeCompare(std_random, std_random[:100]*10)
 
 #bst = BinarySearchTree()
 bst = SplayTree()
