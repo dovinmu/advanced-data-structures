@@ -228,8 +228,7 @@ class SplayTree(BinarySearchTree):
 
     def splay(self, node):
         while node.parent:
-            print('height:', self.height(node))
-            time.sleep(1)
+            #print('height:', self.height(node))
             if node.parent.parent is None:
                 node.rotate()
                 #print('zig')
