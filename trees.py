@@ -1,6 +1,9 @@
 import time
 import numpy as np
 import random
+from pandas import Series
+import matplotlib.pyplot as plt
+
 
 class BinaryTreeNode(object):
     def __init__(self, key, val=True, left=None, right=None, parent=None):
@@ -294,8 +297,27 @@ def treeCompare(load_seq, access_seq):
 
 def treeRace():
     #TODO: compare the speed of each tree for lots of access sequences on the given data
+    '''
+    performance for trees with randomly ordered ranges from 0 to n-1, using
+    a subset of size n/m:
+    TODO: fill these in
+        full set:
+        (n = 1000, m = 1, size=1000)
+        (n = 10000, m = 1, size=10000)
+        1/10 subset:
+        (n = 1000, m = 10, size=100)
+        (n = 10000, m = 10, size=1000)
+        1/100 subset:
+        (n = 1000, m = 100, size=10)
+        (n = 10000, m = 100, size=100)
+        1/1000 subset:
+        (n = 10000, m = 1000, size=10)
+
+    Then: fill in for range(1,k) where k < m
+    '''
     n = 1000
-    m = 1
+    m = 100
+    k = n/100
 
     bst = BinarySearchTree()
     splay = SplayTree()
@@ -305,56 +327,38 @@ def treeRace():
     for num in seq:
         bst.insert(num)
         splay.insert(num)
-    #print(bst)
-    print('Racing Splay Tree vs Binary Search Tree (unbalanced, but randomly built) on access times for a reapeating subset of 1/{} of {}k total inserted elements.'.format(m, int(n/100)/10))
     print(bst)
+    print('Racing Splay Tree vs Binary Search Tree (unbalanced, but randomly built) on access times for a reapeating subset of 1/{} of {}k total inserted elements.'.format(m, int(n/100)/10))
     np.random.shuffle(seq)
-    from pandas import Series
-    import matplotlib.pyplot as plt
-    splay_series = Series()
-    bst_series = Series()
-    bst2_series = Series()
-    i = 0
+    splay_series = []
+    bst_series = []
+    subset = seq[:int(n/m)]
     t0 = time.time()
-    for num in seq[:int(len(seq)/m)]*m:
-        bst_depth = bst.depth(num)
-        #bst_depth = bst.depth(random_key)
-        bst_series.set_value(i, bst_depth)
-        bst.search(num)
-        #bst.search(random_key)
-        i += 1
+    for i in range(m):
+        np.random.shuffle(subset)
+        for num in subset:
+            bst_depth = bst.depth(num)
+            bst_series.append(bst_depth)
+            bst.search(num)
     t1 = time.time()
-    i = 0
-    print('random key on splay tree')
-    random_key = seq[0]
-    print('random key:', random_key)
-    bst_depth = bst.depth(random_key)
-    print('depth:', bst_depth)
-    for num in seq[:int(len(seq)/m)]*m:
-        splay_depth = splay.depth(random_key)
-        splay_series.set_value(i, splay_depth)
-        splay.search(random_key)
-    i += 1
-
-    '''
-    rootkey = splay.root.key
-    for num in seq[:int(len(seq)/m)]*m:
-        splay_depth = splay.depth(rootkey)
-        splay_series.set_value(i, splay_depth)
-        splay.search(rootkey)
-        i += 1
-    '''
+    for i in range(m):
+        np.random.shuffle(subset)
+        for num in subset:
+            splay_depth = splay.depth(num)
+            splay_series.append(splay_depth)
+            splay.search(num)
     t2 = time.time()
-#    print('BST depth of {0}: {1}'.format(num, bst_depth))
-#    print('splay depth of {0}: {1}'.format(num, splay_depth))
-#    print('')
+
+    splay_series = Series(splay_series)
+    bst_series = Series(bst_series)
+
     bst_series.plot(alpha=0.2)
     splay_series.plot(alpha=0.2)
-    #splay_series.plot(alpha=0.2)
+
     bst_series.ewm(span=int(n/m)).mean().plot(style='g--')
     splay_series.ewm(span=int(n/m)).mean().plot(style='k--')
-    #splay_series.ewm(span=int(n/100)).mean().plot(style='r--')
-    plt.title("BST time: {0}  Splay tree (root only) time: {1}".format(int((t1-t0)*1000)/1000,int((t2-t1)*1000)/1000))
+
+    plt.title("BST time: {0}  Splay tree time: {1}".format(int((t1-t0)*1000)/1000,int((t2-t1)*1000)/1000))
     plt.show()
     '''
     uniform_rand = [random.random() for i in range(n)]
