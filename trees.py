@@ -135,6 +135,16 @@ class BinaryTree(Tree):
             leaves = new_leaves
 
 class BinarySearchTree(BinaryTree):
+    def depth(self, key):
+        node = BinarySearchTree.search(self, key)
+        if not node:
+            return -1
+        ret = 0
+        while node.parent:
+            node = node.parent
+            ret += 1
+        return ret
+
     def insert(self, key, val=True):
         if self.root is None:
             self.root = BinaryTreeNode(key, val)
@@ -181,15 +191,15 @@ class BinarySearchTree(BinaryTree):
             return self.stringify(self.root)
 
     def stringify(self, node, level=0):
-        ret = "  "*level+repr(node.key)+"\n"
+        ret = '. ' * level+repr(node.key)+"\n"
         if node.left:
             ret += self.stringify(node.left, level+1)
         else:
-            ret += '  '*(level+1) + '-' + '\n'
+            ret += '. '*(level+1) + '#' + '\n'
         if node.right:
             ret += self.stringify(node.right, level+1)
         else:
-            ret += ' '*(level+1) + '-'
+            ret += '. '*(level+1) + '#' + '\n'
 
         return ret
 
@@ -246,7 +256,8 @@ class TangoTree(BinarySearchTree):
     preferred child. These paths can be stored as auxiliary BBSTs
     sorted by the original keys.
     '''
-    pass
+    def __init__(d):
+        raise NotImplementedError()
 
 
 '''
@@ -282,17 +293,49 @@ def treeCompare(load_seq, access_seq):
 
 def treeRace():
     #TODO: compare the speed of each tree for lots of access sequences on the given data
-    n = 10000
-    std_random = np.random.randn(n)
-    load = np.copy(std_random)
-    print("{} std dev random nums, sorted access".format(n))
-    treeCompare(load, sorted(std_random))
-    print("{} std dev random nums, shuffled access".format(n))
-    np.random.shuffle(std_random)
-    treeCompare(load, std_random)
+    n = 100
+    m = 100
 
-    print('\n')
+    bst = BinarySearchTree()
+    splay = SplayTree()
 
+    seq = [i for i in range(n)]
+    np.random.shuffle(seq)
+    for num in seq:
+        bst.insert(num)
+        splay.insert(num)
+    #print(bst)
+    print('Racing Splay Tree vs Binary Search Tree (unbalanced, but randomly built) on access times for a reapeating subset of 1/{} of {}k total inserted elements.'.format(m, int(n/1000)))
+    np.random.shuffle(seq)
+    from pandas import Series
+    import matplotlib.pyplot as plt
+    splay_series = Series()
+    bst_series = Series()
+    i = 0
+    t0 = time.time()
+    for num in seq[:int(len(seq)/m)]*m:
+        bst_depth = bst.depth(num)
+        bst_series.set_value(i, bst_depth)
+        bst.search(num)
+        i += 1
+    t1 = time.time()
+    i = 0
+    for num in seq[:int(len(seq)/m)]*m:
+        splay_depth = splay.depth(num)
+        splay_series.set_value(i, splay_depth)
+        splay.search(num)
+        i += 1
+    t2 = time.time()
+#    print('BST depth of {0}: {1}'.format(num, bst_depth))
+#    print('splay depth of {0}: {1}'.format(num, splay_depth))
+#    print('')
+    bst_series.plot(alpha=0.2)
+    splay_series.plot(alpha=0.2)
+    bst_series.ewm(span=int(n/100)).mean().plot(style='g--')
+    splay_series.ewm(span=int(n/100)).mean().plot(style='r--')
+    plt.title("BST time: {0}  Splay time: {1}".format(int((t1-t0)*1000)/1000,int((t2-t1)*1000)/1000))
+    plt.show()
+    '''
     uniform_rand = [random.random() for i in range(n)]
     load = np.copy(uniform_rand)
     print("{} uniform random nums, sorted access".format(n))
@@ -305,50 +348,10 @@ def treeRace():
     uniform_rand = [num for num in uniform_rand if num < 0.2]
     print("{} uniform random numbers, random load / subset access (<.2)".format(n))
     treeCompare(load, uniform_rand * 5)
-
-#bst = BinarySearchTree()
-bst = SplayTree()
-seq = [3,8,4,2,1,9,6,0]
-for num in seq:
-    bst.insert(num)
-print(bst)
-print('searching')
-for num in seq:
-    bst.search(num)
-print(bst)
-
+    '''
+treeRace()
 '''
-#another attempt to print tree structure
+#interesting attempt to print tree structure
 #check out http://blog.mikedll.com/2011/04/red-black-trees-in-python.html
 #for possible awesome console based printing of trees
-
-def printBST(bst):
-    leaves = [bst.root]
-    level = 1
-    keep_going = True
-    while keep_going:
-        new_leaves = []
-        keep_going = False
-        leaf_counter = 0
-        print([str(leaf) if leaf else '' for leaf in leaves])
-        for leaf in leaves:
-            leaf_counter += 1
-            if leaf:
-                #print(str(leaf), end='')
-                if leaf.left or leaf.right:
-                    keep_going = True
-                new_leaves.append(leaf.left)
-                new_leaves.append(leaf.right)
-            else:
-                #print(' ', end='')
-                new_leaves.append(None)
-                new_leaves.append(None)
-            #if leaf_counter % 2 != 0:
-            #    print(' ', end='')
-        #print('')
-        if keep_going:
-            for i in range(1,len(leaves)+1):
-                print(' |{}\\{}'.format(' '*i, ' '*(level-i))*level)
-        level += 1
-        leaves =  new_leaves
 '''
