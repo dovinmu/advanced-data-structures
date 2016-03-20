@@ -184,8 +184,13 @@ class BinarySearchTree(BinaryTree):
         ret = "  "*level+repr(node.key)+"\n"
         if node.left:
             ret += self.stringify(node.left, level+1)
+        else:
+            ret += '  '*(level+1) + '-' + '\n'
         if node.right:
             ret += self.stringify(node.right, level+1)
+        else:
+            ret += ' '*(level+1) + '-'
+
         return ret
 
 #challenge: given x, cut a tree into two red-black trees with one
@@ -303,15 +308,47 @@ def treeRace():
 
 #bst = BinarySearchTree()
 bst = SplayTree()
-bst.insert(3)
-bst.insert(10)
-bst.insert(4)
-bst.insert(2)
-bst.insert(1)
-bst.insert(16)
-bst.insert(6)
-bst.insert(2.5)
-bst.insert(0.5)
-bst.insert(4.5)
-bst.insert(0)
+seq = [3,8,4,2,1,9,6,0]
+for num in seq:
+    bst.insert(num)
 print(bst)
+print('searching')
+for num in seq:
+    bst.search(num)
+print(bst)
+
+'''
+#another attempt to print tree structure
+#check out http://blog.mikedll.com/2011/04/red-black-trees-in-python.html
+#for possible awesome console based printing of trees
+
+def printBST(bst):
+    leaves = [bst.root]
+    level = 1
+    keep_going = True
+    while keep_going:
+        new_leaves = []
+        keep_going = False
+        leaf_counter = 0
+        print([str(leaf) if leaf else '' for leaf in leaves])
+        for leaf in leaves:
+            leaf_counter += 1
+            if leaf:
+                #print(str(leaf), end='')
+                if leaf.left or leaf.right:
+                    keep_going = True
+                new_leaves.append(leaf.left)
+                new_leaves.append(leaf.right)
+            else:
+                #print(' ', end='')
+                new_leaves.append(None)
+                new_leaves.append(None)
+            #if leaf_counter % 2 != 0:
+            #    print(' ', end='')
+        #print('')
+        if keep_going:
+            for i in range(1,len(leaves)+1):
+                print(' |{}\\{}'.format(' '*i, ' '*(level-i))*level)
+        level += 1
+        leaves =  new_leaves
+'''
