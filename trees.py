@@ -4,7 +4,10 @@ import random
 import pandas as pd
 from pandas import Series, DataFrame
 import matplotlib.pyplot as plt
-plt.style.use('ggplot')
+
+from pylab import rcParams
+rcParams['figure.figsize'] = 15, 10
+plt.style.use('fivethirtyeight')
 
 class BinaryTreeNode(object):
     def __init__(self, key, val=True, left=None, right=None, parent=None):
@@ -40,9 +43,8 @@ class BinaryTreeNode(object):
             return
         if self == self.parent.left:
             #right rotation
-            A = self.left
-            B = self.right
-            C = self.parent.right
+            #B = self.right
+            #C = self.parent.right
             other = self.parent
             new_parent = self.parent.parent
             if new_parent:
@@ -50,15 +52,13 @@ class BinaryTreeNode(object):
                     new_parent.setLeft(self)
                 else:
                     new_parent.setRight(self)
-            self.setLeft(A)
-            other.setLeft(B)
-            other.setRight(C)
+            other.setLeft(self.right)
+            #other.setRight(C)
             self.setRight(other)
         elif self == self.parent.right:
             #left rotation
-            A = self.parent.left
-            B = self.left
-            C = self.right
+            #A = self.parent.left
+            #B = self.left
             other = self.parent
             new_parent = self.parent.parent
             if new_parent:
@@ -68,9 +68,8 @@ class BinaryTreeNode(object):
                     new_parent.setRight(self)
             else:
                 self.parent = None
-            other.setLeft(A)
-            other.setRight(B)
-            self.setRight(C)
+            #other.setLeft(A)
+            other.setRight(self.left)
             self.setLeft(other)
         else:
             print("Cannot find self in parent!")
@@ -135,7 +134,7 @@ class BinaryTree(Tree):
             leaves = new_leaves
         return leaves
 
-    def checkPointers(self):
+    def checkTreeProperty(self):
         seen = {}
         leaves = [self.root]
         while leaves:
@@ -143,20 +142,48 @@ class BinaryTree(Tree):
             for leaf in leaves:
                 if leaf.left:
                     if leaf.right in seen:
-                        print('Multiple parents: {0}->{1}'.format(leaf.key, leaf.left.key))
+                        print ('Multiple parents: {0}->{1}'.format(leaf.key, leaf.left.key))
+                        return False
                     else:
                         new_leaves.append(leaf.left)
                     if leaf.left.parent != leaf:
-                        print('erroneous back-pointer:{0}->{1}'.format(leaf.key, leaf.left.key))
+                        print ('erroneous back-pointer:{0}->{1}'.format(leaf.key, leaf.left.key))
+                        return False
                 if leaf.right:
                     if leaf.right in seen:
-                        print('Multiple parents: {0}->{1}'.format(leaf.key, leaf.left.key))
+                        print ('Multiple parents: {0}->{1}'.format(leaf.key, leaf.left.key))
+                        return False
                     else:
                         new_leaves.append(leaf.right)
                     if leaf.right.parent != leaf:
-                        print('erroneous back-pointer:{0}->{1}'.format(leaf.key, leaf.right.key))
+                        print ('erroneous back-pointer:{0}->{1}'.format(leaf.key, leaf.right.key))
+                        return False
                 seen[leaf] = True
             leaves = new_leaves
+        print("Looks like a tree.")
+        return True
+
+    def checkSearchProperty(self):
+        leaves = [self.root]
+        while leaves:
+            new_leaves = []
+            for leaf in leaves:
+                if leaf.right:
+                    if leaf.right.key < leaf.key:
+                        print('Nope: {} < {} is wrong'.format(leaf.right, leaf))
+                        return False
+                    new_leaves.append(leaf.right)
+                if leaf.left:
+                    if leaf.left.key > leaf.key:
+                        print("Nope: {} > {} is wrong.".format(leaf.left, leaf))
+                        return False
+                    new_leaves.append(leaf.left)
+            leaves = new_leaves
+        print("This tree is searchable, yay!")
+        return True
+
+    def check(self):
+        return self.checkTreeProperty() and self.checkSearchProperty()
 
 class BinarySearchTree(BinaryTree):
     def depth(self, key):
@@ -336,14 +363,15 @@ def treeRace():
 
     Then: fill in for range(1,k) where k < m
     '''
-    n = 1000000
-    m = 10000
+    n = 100000
+    m = 100
 
     bst = BinarySearchTree()
     splay = SplayTree()
 
     seq = [i for i in range(n)]
     np.random.shuffle(seq)
+    print('inerting {} values'.format(n))
     for num in seq:
         bst.insert(num)
         splay.insert(num)
@@ -352,7 +380,8 @@ def treeRace():
     np.random.shuffle(seq)
     splay_series = []
     bst_series = []
-    subset = seq[:int(n/m)]
+    #subset = seq[:int(n/m)]
+    subset = [num for num in seq if num < m]
     t0 = time.time()
     for i in range(m):
         np.random.shuffle(subset)
@@ -403,6 +432,7 @@ def compareDepthAccessTimes(n = 10000):
 
     seq = [i for i in range(n)]
     np.random.shuffle(seq)
+    print('inerting {} values'.format(n))
     for num in seq:
         bst.insert(num)
         splay.insert(num)
@@ -410,6 +440,7 @@ def compareDepthAccessTimes(n = 10000):
     bst_series = []
     splay_series = []
     k = min(bst.height(), splay.height())
+    print('timing access from depth 0 to depth {}'.format(k))
     for i in range(k):
         bst_key = bst.getLevel(i)[0].key
         level = splay.getLevel(i)
@@ -443,17 +474,6 @@ np.random.shuffle(seq)
 for num in seq:
     splay.insert(num)
 
-i = 0
-level = splay.getLevel(i)
-while level:
-#    print('depth', i)
-    key = level[0].key
-#    print('key', key)
-#    print(splay)
-    splay.search(key)
-#    print('\n')
-    i += 1
-    level = splay.getLevel(i)
 
 '''
 #interesting attempt to print tree structure
