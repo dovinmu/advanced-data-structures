@@ -1,8 +1,10 @@
 import time
 import numpy as np
+import sys
+import inspect
 import random
 import pandas as pd
-from pandas import Series, DataFrame
+
 import matplotlib.pyplot as plt
 
 from pylab import rcParams
@@ -88,23 +90,17 @@ class BinaryTreeNode(TreeNode):
         if self.val is not True and self.val is not None:
             return str('{}:{}'.format(self.key, self.val))
         return str(self.key)
-        '''Print tree structure (needs work)
-        left = self.left.__repr__(level) if self.left else ''
-        right = self.right.__repr__(level+1) if self.right else ''
-        left = left.split('\n')
-        right = right.split('\n')
-        combined = ''
-        while left or right:
-            if left:
-                combined += left.pop(0) + ' '
-            else:
-                combined += ' ' * level
-            if right:
-                combined += right.pop(0) + ' '
-            combined += '\n'
-        return str('{0}\n|\\\n{1}'.format(self.key, combined))
-        '''
 
+'''TODO: add these functions to all trees (from https://en.wikipedia.org/wiki/Tree_(data_structure))
+Enumerating all the items
+Enumerating a section of a tree
+Searching for an item
+Adding a new item at a certain position on the tree
+Deleting an item
+Pruning: Removing a whole section of a tree
+Grafting: Adding a whole section to a tree
+Finding the root for any node
+'''
 class Tree(object):
     def __init__(self):
         self.root = None
@@ -257,12 +253,6 @@ class BinarySearchTree(Tree):
 
         return ret
 
-#challenge: given x, cut a tree into two red-black trees with one
-#tree's values < x and one trees's values > x
-class RedBlackTree(BinarySearchTree):
-    def insert(self, key, val=True):
-        node = BinarySearchTree.insert(self, key, val)
-        #how do I know what to color the node?
 
 
 class SplayTree(BinarySearchTree):
@@ -271,7 +261,8 @@ class SplayTree(BinarySearchTree):
        Insertion, look-up and removal are O(logn) amortized. For sequences
        of non-random operations, splay trees perform better than normal BSTs.
 
-       Conjectured to be dynamically optimal
+       Conjectured to be dynamically optimal, but this implementation generally
+       performs at least slightly worse than a regular BST.
     '''
     def search(self, key):
         node = BinarySearchTree.search(self, key)
@@ -325,6 +316,29 @@ class SplayTree(BinarySearchTree):
                 node.rotate()
         self.root = node
 
+#challenge: given x, cut a tree into two red-black trees with one
+#tree's values < x and one trees's values > x
+class RedBlackTree(BinarySearchTree):
+    pass
+
+class AVLTree(BinarySearchTree):
+    pass
+
+class BTree(Tree):
+    pass
+
+class Quadtree(Tree):
+    ''''''
+    pass
+
+class Octree(Tree):
+    ''''''
+    pass
+
+class PrefixTree(Tree):
+    '''Also known as a Trie.'''
+    pass
+
 class RangeTree(BinarySearchTree):
     '''
     A range tree on a set of 1-dimensional points is a balanced binary search tree on those points. The points stored in the tree are stored in the leaves of the tree; each internal node stores the largest value contained in its left subtree. A range tree on a set of points in d-dimensions is a recursively defined multi-level binary search tree. Each level of the data structure is a binary search tree on one of the d-dimensions. The first level is a binary search tree on the first of the d-coordinates. Each vertex v of this tree contains an associated structure that is a (d−1)-dimensional range tree on the last (d−1)-coordinates of the points stored in the subtree of v.
@@ -363,142 +377,119 @@ Dynamic Optimality (aka O(1)-competitive): we want for the total cost
    O(loglogn). Splay trees might be dynamically optimal, but we don't know.
 '''
 
-def treeCompare(load_seq, access_seq):
-    tree_dict = {'BST':BinarySearchTree(), 'SplayTree':SplayTree()}
-    for name,tree in tree_dict.items():
-        for item in load_seq:
-            tree.insert(item)
-    for name,tree in tree_dict.items():
+class Test(object):
+    def treeCompare(load_seq, access_seq):
+        tree_dict = {'BST':BinarySearchTree(), 'SplayTree':SplayTree()}
+        for name,tree in tree_dict.items():
+            for item in load_seq:
+                tree.insert(item)
+        for name,tree in tree_dict.items():
+            t0 = time.time()
+            for item in access_seq:
+                tree.search(item)
+            t1 = time.time()
+            print("{0} took {1} seconds. Height: {2}".format(name, int((t1-t0)*1000)/1000, tree.height()))
+
+    def treeRace():
+        n = 100000
+        m = 100
+
+        bst = BinarySearchTree()
+        splay = SplayTree()
+
+        seq = [i for i in range(n)]
+        np.random.shuffle(seq)
+        print('inerting {} values'.format(n))
+        for num in seq:
+            bst.insert(num)
+            splay.insert(num)
+        print(bst)
+        print('Racing Splay Tree vs Binary Search Tree (unbalanced, but randomly built) on access times for a reapeating subset 0 <= num < {} of {}k total inserted elements.'.format(m, int(n/100)/10))
+        np.random.shuffle(seq)
+        splay_series = []
+        bst_series = []
+        #subset = seq[:int(n/m)]
+        subset = [num for num in seq if num < m]
+        print('subset:', subset)
         t0 = time.time()
-        for item in access_seq:
-            tree.search(item)
+        for i in range(10):
+            np.random.shuffle(subset)
+            for num in subset:
+                bst_depth = bst.depth(num)
+                bst_series.append(bst_depth)
+                bst.search(num)
         t1 = time.time()
-        print("{0} took {1} seconds. Height: {2}".format(name, int((t1-t0)*1000)/1000, tree.height()))
-
-def treeRace():
-    #TODO: compare the speed of each tree for lots of access sequences on the given data
-    '''
-    performance for trees with randomly ordered ranges from 0 to n-1, using
-    a subset of size n/m:
-    TODO: fill these in
-        full set:
-        (n = 1000, m = 1, size=1000)
-        (n = 10000, m = 1, size=10000)
-        1/10 subset:
-        (n = 1000, m = 10, size=100)
-        (n = 10000, m = 10, size=1000)
-        1/100 subset:
-        (n = 1000, m = 100, size=10)
-        (n = 10000, m = 100, size=100)
-        1/1000 subset:
-        (n = 10000, m = 1000, size=10)
-
-    Then: fill in for range(1,k) where k < m
-    '''
-    n = 100000
-    m = 100
-
-    bst = BinarySearchTree()
-    splay = SplayTree()
-
-    seq = [i for i in range(n)]
-    np.random.shuffle(seq)
-    print('inerting {} values'.format(n))
-    for num in seq:
-        bst.insert(num)
-        splay.insert(num)
-    print(bst)
-    print('Racing Splay Tree vs Binary Search Tree (unbalanced, but randomly built) on access times for a reapeating subset 0 <= num < {} of {}k total inserted elements.'.format(m, int(n/100)/10))
-    np.random.shuffle(seq)
-    splay_series = []
-    bst_series = []
-    #subset = seq[:int(n/m)]
-    subset = [num for num in seq if num < m]
-    print('subset:', subset)
-    t0 = time.time()
-    for i in range(10):
-        np.random.shuffle(subset)
-        for num in subset:
-            bst_depth = bst.depth(num)
-            bst_series.append(bst_depth)
-            bst.search(num)
-    t1 = time.time()
-    for i in range(10):
-        np.random.shuffle(subset)
-        for num in subset:
-            splay_depth = splay.depth(num)
-            splay_series.append(splay_depth)
-            splay.search(num)
-    t2 = time.time()
-
-    splay_series = Series(splay_series)
-    bst_series = Series(bst_series)
-
-    bst_series.plot(alpha=0.2)
-    splay_series.plot(alpha=0.2)
-
-    bst_series.ewm(span=int(n/m)).mean().plot(style='g--')
-    splay_series.ewm(span=int(n/m)).mean().plot(style='k--')
-
-    plt.title("BST time: {0}  Splay tree time: {1}".format(int((t1-t0)*1000)/1000,int((t2-t1)*1000)/1000))
-    plt.show()
-    '''
-    uniform_rand = [random.random() for i in range(n)]
-    load = np.copy(uniform_rand)
-    print("{} uniform random nums, sorted access".format(n))
-    treeCompare(load, sorted(uniform_rand))
-    print("{} uniform random nums, shuffled access".format(n))
-    np.random.shuffle(uniform_rand)
-    treeCompare(load, uniform_rand)
-
-    #This should be what a splay tree is the best at!
-    uniform_rand = [num for num in uniform_rand if num < 0.2]
-    print("{} uniform random numbers, random load / subset access (<.2)".format(n))
-    treeCompare(load, uniform_rand * 5)
-    '''
-
-def compareDepthAccessTimes(n = 10000):
-    '''Written in an effort to optimize Splay tree, which seems to be losing to
-    BST more often than not even in non-random access sequences'''
-    bst = BinarySearchTree()
-    splay = SplayTree()
-
-    seq = [i for i in range(n)]
-    np.random.shuffle(seq)
-    print('inerting {} values'.format(n))
-    for num in seq:
-        bst.insert(num)
-        splay.insert(num)
-    print(bst)
-    bst_series = []
-    splay_series = []
-    k = min(bst.height(), splay.height())
-    print('timing access from depth 0 to depth {}'.format(k))
-    for i in range(k):
-        bst_key = bst.getLevel(i)[0].key
-        level = splay.getLevel(i)
-        if level:
-            splay_key = level[0].key
-        else:
-            break
-        t0 = time.time()
-        bst.search(bst_key)
-        t1 = time.time()
-        splay.search(splay_key)
+        for i in range(10):
+            np.random.shuffle(subset)
+            for num in subset:
+                splay_depth = splay.depth(num)
+                splay_series.append(splay_depth)
+                splay.search(num)
         t2 = time.time()
-        bst_series.append((t1-t0)*1000)
-        splay_series.append((t2-t1)*1000)
-    df = DataFrame()
-    df['BST'] = bst_series
-    df['Splay'] = splay_series
-    df.plot(title="BST and Splay access time by depth for trees of {} items".format(n))
-    plt.xlabel('depth')
-    plt.ylabel('ms')
-    plt.show()
+
+        splay_series = pd.Series(splay_series)
+        bst_series = pd.Series(bst_series)
+
+        bst_series.plot(alpha=0.2)
+        splay_series.plot(alpha=0.2)
+
+        bst_series.ewm(span=int(n/m)).mean().plot(style='g--')
+        splay_series.ewm(span=int(n/m)).mean().plot(style='k--')
+
+        plt.title("BST time: {0}  Splay tree time: {1}".format(int((t1-t0)*1000)/1000,int((t2-t1)*1000)/1000))
+        plt.show()
+
+    def compareDepthAccessTimes(n = 10000):
+        '''Written in an effort to optimize Splay tree, which seems to be losing to
+        BST more often than not even in non-random access sequences'''
+        bst = BinarySearchTree()
+        splay = SplayTree()
+
+        seq = [i for i in range(n)]
+        np.random.shuffle(seq)
+        print('inerting {} values'.format(n))
+        for num in seq:
+            bst.insert(num)
+            splay.insert(num)
+        print(bst)
+        bst_series = []
+        splay_series = []
+        k = min(bst.height(), splay.height())
+        print('timing access from depth 0 to depth {}'.format(k))
+        for i in range(k):
+            bst_key = bst.getLevel(i)[0].key
+            level = splay.getLevel(i)
+            if level:
+                splay_key = level[0].key
+            else:
+                break
+            t0 = time.time()
+            bst.search(bst_key)
+            t1 = time.time()
+            splay.search(splay_key)
+            t2 = time.time()
+            bst_series.append((t1-t0)*1000)
+            splay_series.append((t2-t1)*1000)
+        df = pd.DataFrame()
+        df['BST'] = bst_series
+        df['Splay'] = splay_series
+        df.plot(title="BST and Splay access time by depth for trees of {} items".format(n))
+        plt.xlabel('depth')
+        plt.ylabel('ms')
+        plt.show()
 
 
 '''
 #interesting attempt to print tree structure
 #check out http://blog.mikedll.com/2011/04/red-black-trees-in-python.html
 #for possible awesome console based printing of trees
+
+#TODO: write a method that searches for the times when a splay tree is better
+#than a regular BST
 '''
+
+functions = inspect.getmembers(Test, inspect.isfunction)
+classes = inspect.getmembers(sys.modules[__name__], inspect.isclass)
+print('Test class functions: ', ', '.join([f[0] for f in functions]))
+print('Classes: ', ', '.join([c[0] for c in classes]))
+print('Currently implemented: SplayTree and BinarySearchTree')
