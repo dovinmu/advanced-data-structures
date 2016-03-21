@@ -18,57 +18,49 @@ class BinaryTreeNode(object):
         self.parent = parent
 
     def setLeft(self, node):
-        if self.left and self.left.parent == self:
+        if self.left and self.left.parent is self:
             self.left.parent = None
         self.left = node
         if node:
             node.parent = self
 
     def setRight(self, node):
-        if self.right and self.right.parent == self:
+        if self.right and self.right.parent is self:
             self.right.parent = None
         self.right = node
         if node:
             node.parent = self
 
     def isLeft(self, node):
-        return node and node.left == self
+        return node and node.left is self
 
     def isRight(self, node):
-        return node and node.right == self
+        return node and node.right is self
 
     def rotate(self):
         if self.parent is None:
             print("cannot rotate on a root!")
             return
-        if self == self.parent.left:
-            #right rotation
-            #B = self.right
-            #C = self.parent.right
+        if self is self.parent.left:
             other = self.parent
             new_parent = self.parent.parent
             if new_parent:
-                if new_parent.left == other:
+                if new_parent.left is other:
                     new_parent.setLeft(self)
                 else:
                     new_parent.setRight(self)
             other.setLeft(self.right)
-            #other.setRight(C)
             self.setRight(other)
-        elif self == self.parent.right:
-            #left rotation
-            #A = self.parent.left
-            #B = self.left
+        elif self is self.parent.right:
             other = self.parent
             new_parent = self.parent.parent
             if new_parent:
-                if new_parent.left == other:
+                if new_parent.left is other:
                     new_parent.setLeft(self)
                 else:
                     new_parent.setRight(self)
             else:
                 self.parent = None
-            #other.setLeft(A)
             other.setRight(self.left)
             self.setLeft(other)
         else:
@@ -280,7 +272,7 @@ class SplayTree(BinarySearchTree):
     def splay(self, node):
         while node.parent:
             #print('height:', self.height(node))
-            if node.parent.parent is None:
+            if not node.parent.parent:
 #                print('zig', end=' ')
                 node.rotate()
             elif (node.isLeft(node.parent) and node.parent.isLeft(node.parent.parent)) or (node.isRight(node.parent) and node.parent.isRight(node.parent.parent)):
@@ -462,17 +454,6 @@ def compareDepthAccessTimes(n = 10000):
     plt.xlabel('depth')
     plt.ylabel('ms')
     plt.show()
-
-compareDepthAccessTimes()
-#treeRace()
-splay = SplayTree()
-seq = []
-for i in range(100):
-    seq.append(i)
-np.random.shuffle(seq)
-#print(seq)
-for num in seq:
-    splay.insert(num)
 
 
 '''
