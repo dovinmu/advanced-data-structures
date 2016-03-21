@@ -10,12 +10,13 @@ rcParams['figure.figsize'] = 15, 10
 plt.style.use('fivethirtyeight')
 
 class BinaryTreeNode(object):
-    def __init__(self, key, val=True, left=None, right=None, parent=None):
+    def __init__(self, key, val=True, left=None, right=None, parent=None, data=None):
         self.key = key
         self.val = val
         self.left = left
         self.right = right
         self.parent = parent
+        self.data = data
 
     def setLeft(self, node):
         if self.left and self.left.parent is self:
@@ -46,23 +47,27 @@ class BinaryTreeNode(object):
             new_parent = self.parent.parent
             if new_parent:
                 if new_parent.left is other:
-                    new_parent.setLeft(self)
+                    new_parent.left = self
                 else:
-                    new_parent.setRight(self)
+                    new_parent.right = self
+                self.parent = new_parent
             other.setLeft(self.right)
-            self.setRight(other)
+            self.right = other
+            other.parent = self
         elif self is self.parent.right:
             other = self.parent
             new_parent = self.parent.parent
             if new_parent:
                 if new_parent.left is other:
-                    new_parent.setLeft(self)
+                    new_parent.left = self
                 else:
-                    new_parent.setRight(self)
+                    new_parent.right = self
+                self.parent = new_parent
             else:
                 self.parent = None
             other.setRight(self.left)
-            self.setLeft(other)
+            self.left = other
+            other.parent = self
         else:
             print("Cannot find self in parent!")
 
