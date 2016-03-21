@@ -9,14 +9,25 @@ from pylab import rcParams
 rcParams['figure.figsize'] = 15, 10
 plt.style.use('fivethirtyeight')
 
-class BinaryTreeNode(object):
-    def __init__(self, key, val=True, left=None, right=None, parent=None, data=None):
+class TreeNode(object):
+    def __init__(self, key, val=True, children=[], parent=None, data=None):
         self.key = key
         self.val = val
-        self.left = left
-        self.right = right
+        self.children = children
         self.parent = parent
         self.data = data
+
+    def children(self):
+        return self.children
+
+class BinaryTreeNode(TreeNode):
+    def __init__(self, key, val=True, left=None, right=None, parent=None, data=None):
+        super.__init__(key, val, parent=parent, data=data)
+        self.left = left
+        self.right = right
+
+    def children(self):
+        return [self.left, self.right]
 
     def setLeft(self, node):
         if self.left and self.left.parent is self:
@@ -98,7 +109,6 @@ class Tree(object):
     def __init__(self):
         self.root = None
 
-class BinaryTree(Tree):
     def height(self, node=None):
         if not node:
             node = self.root
@@ -108,10 +118,9 @@ class BinaryTree(Tree):
             new_leaves = []
             for leaf in leaves:
                 if leaf:
-                    if leaf.left:
-                        new_leaves.append(leaf.left)
-                    if leaf.right:
-                        new_leaves.append(leaf.right)
+                    for child in leaf.children():
+                        if child:
+                            new_leaves.append(child)
             level += 1
             leaves = new_leaves
         return level-1
@@ -123,10 +132,9 @@ class BinaryTree(Tree):
             new_leaves = []
             for leaf in leaves:
                 if leaf:
-                    if leaf.left:
-                        new_leaves.append(leaf.left)
-                    if leaf.right:
-                        new_leaves.append(leaf.right)
+                    for child in leaf.children():
+                        if child:
+                            new_leaves.append(child)
             level += 1
             leaves = new_leaves
         return leaves
@@ -137,30 +145,26 @@ class BinaryTree(Tree):
         while leaves:
             new_leaves = []
             for leaf in leaves:
-                if leaf.left:
-                    if leaf.right in seen:
-                        print ('Multiple parents: {0}->{1}'.format(leaf.key, leaf.left.key))
-                        return False
-                    else:
-                        new_leaves.append(leaf.left)
-                    if leaf.left.parent != leaf:
-                        print ('erroneous back-pointer:{0}->{1}'.format(leaf.key, leaf.left.key))
-                        return False
-                if leaf.right:
-                    if leaf.right in seen:
-                        print ('Multiple parents: {0}->{1}'.format(leaf.key, leaf.left.key))
-                        return False
-                    else:
-                        new_leaves.append(leaf.right)
-                    if leaf.right.parent != leaf:
-                        print ('erroneous back-pointer:{0}->{1}'.format(leaf.key, leaf.right.key))
-                        return False
+                for child in leaf.children():
+                    if child:
+                        if child in seen:
+                            print ('Multiple parents: {0}->{1}'.format(leaf.key, child.key))
+                            return False
+                        else:
+                            new_leaves.append(child)
+                        if leaf.left.parent != leaf:
+                            print ('erroneous back-pointer:{0}->{1}'.format(leaf.key, child.key))
+                            return False
                 seen[leaf] = True
             leaves = new_leaves
         print("Looks like a tree.")
         return True
 
-    def checkSearchProperty(self):
+class BinarySearchTree(Tree):
+    def check(self):
+        return self.checkTreeProperty() and self.checkBinarySearchProperty()
+
+    def checkBinarySearchProperty(self):
         leaves = [self.root]
         while leaves:
             new_leaves = []
@@ -169,20 +173,16 @@ class BinaryTree(Tree):
                     if leaf.right.key < leaf.key:
                         print('Nope: {} < {} is wrong'.format(leaf.right, leaf))
                         return False
-                    new_leaves.append(leaf.right)
-                if leaf.left:
-                    if leaf.left.key > leaf.key:
-                        print("Nope: {} > {} is wrong.".format(leaf.left, leaf))
-                        return False
-                    new_leaves.append(leaf.left)
-            leaves = new_leaves
-        print("This tree is searchable, yay!")
-        return True
+                        new_leaves.append(leaf.right)
+                        if leaf.left:
+                            if leaf.left.key > leaf.key:
+                                print("Nope: {} > {} is wrong.".format(leaf.left, leaf))
+                                return False
+                                new_leaves.append(leaf.left)
+                                leaves = new_leaves
+                                print("This tree is searchable, yay!")
+                                return True
 
-    def check(self):
-        return self.checkTreeProperty() and self.checkSearchProperty()
-
-class BinarySearchTree(BinaryTree):
     def depth(self, key):
         node = BinarySearchTree.search(self, key)
         if not node:
@@ -196,23 +196,26 @@ class BinarySearchTree(BinaryTree):
     def insert(self, key, val=True):
         if self.root is None:
             self.root = BinaryTreeNode(key, val)
+            return self.root
         else:
-            self.insertRecursively(key, val, self.root)
+            return self.insertRecursively(key, val, self.root)
 
     def insertRecursively(self, key, val, node):
         if key > node.key:
             if node.right is None:
                 node.right = BinaryTreeNode(key, val, parent=node)
+                return node.right
             else:
-                self.insertRecursively(key, val, node.right)
+                return self.insertRecursively(key, val, node.right)
         else:
             if node.key == key:
                 print("Attempting to insert a duplicate... disallowed")
-                return
+                return None
             if node.left is None:
                 node.left = BinaryTreeNode(key, val, parent=node)
+                return node.left
             else:
-                self.insertRecursively(key, val, node.left)
+                return self.insertRecursively(key, val, node.left)
 
     def search(self, key):
         if self.root is None:
@@ -257,9 +260,10 @@ class BinarySearchTree(BinaryTree):
 #challenge: given x, cut a tree into two red-black trees with one
 #tree's values < x and one trees's values > x
 class RedBlackTree(BinarySearchTree):
-    '''
-    '''
-    pass
+    def insert(self, key, val=True):
+        node = BinarySearchTree.insert(self, key, val)
+        #how do I know what to color the node?
+
 
 class SplayTree(BinarySearchTree):
     '''In a splay tree, accessing a node x of a BST brings it to the root.
@@ -277,13 +281,44 @@ class SplayTree(BinarySearchTree):
     def splay(self, node):
         while node.parent:
             #print('height:', self.height(node))
-            if not node.parent.parent:
+            grandparent = node.parent.parent
+            if not grandparent:
 #                print('zig', end=' ')
                 node.rotate()
-            elif (node.isLeft(node.parent) and node.parent.isLeft(node.parent.parent)) or (node.isRight(node.parent) and node.parent.isRight(node.parent.parent)):
+            elif node.isLeft(node.parent) and node.parent.isLeft(grandparent):
+                #print('zig-zig', end=' ')
+                #node.parent.rotate()
+                #node.rotate()
+                B = node.right
+                C = node.parent.right
+                node.setRight(node.parent)
+                if grandparent.parent:
+                    if grandparent.isLeft(grandparent.parent):
+                        grandparent.parent.setLeft(node)
+                    else:
+                        grandparent.parent.setRight(node)
+                else:
+                    node.parent = None
+                node.right.setLeft(B)
+                node.right.setRight(grandparent)
+                grandparent.setLeft(C)
+            elif node.isRight(node.parent) and node.parent.isRight(grandparent):
 #                print('zig-zig', end=' ')
-                node.parent.rotate()
-                node.rotate()
+                #node.parent.rotate()
+                #node.rotate()
+                B = node.parent.left
+                C = node.left
+                node.setLeft(node.parent)
+                if grandparent.parent:
+                    if grandparent.isLeft(grandparent.parent):
+                        grandparent.parent.setLeft(node)
+                    else:
+                        grandparent.parent.setRight(node)
+                else:
+                    node.parent = None
+                node.left.setRight(C)
+                node.left.setLeft(grandparent)
+                grandparent.setRight(B)
             else:
 #                print('zig-zag', end=' ')
                 node.rotate()
@@ -373,21 +408,22 @@ def treeRace():
         bst.insert(num)
         splay.insert(num)
     print(bst)
-    print('Racing Splay Tree vs Binary Search Tree (unbalanced, but randomly built) on access times for a reapeating subset of 1/{} of {}k total inserted elements.'.format(m, int(n/100)/10))
+    print('Racing Splay Tree vs Binary Search Tree (unbalanced, but randomly built) on access times for a reapeating subset 0 <= num < {} of {}k total inserted elements.'.format(m, int(n/100)/10))
     np.random.shuffle(seq)
     splay_series = []
     bst_series = []
     #subset = seq[:int(n/m)]
     subset = [num for num in seq if num < m]
+    print('subset:', subset)
     t0 = time.time()
-    for i in range(m):
+    for i in range(10):
         np.random.shuffle(subset)
         for num in subset:
             bst_depth = bst.depth(num)
             bst_series.append(bst_depth)
             bst.search(num)
     t1 = time.time()
-    for i in range(m):
+    for i in range(10):
         np.random.shuffle(subset)
         for num in subset:
             splay_depth = splay.depth(num)
