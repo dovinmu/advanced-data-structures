@@ -1,9 +1,10 @@
 import time
 import numpy as np
 import random
-from pandas import Series
+import pandas as pd
+from pandas import Series, DataFrame
 import matplotlib.pyplot as plt
-
+plt.style.use('ggplot')
 
 class BinaryTreeNode(object):
     def __init__(self, key, val=True, left=None, right=None, parent=None):
@@ -76,6 +77,9 @@ class BinaryTreeNode(object):
 
 
     def __repr__(self, level=0):
+        #TODO: awkward, fix this
+        if self.val is not True and self.val is not None:
+            return str('{}:{}'.format(self.key, self.val))
         return str(self.key)
         '''Print tree structure (needs work)
         left = self.left.__repr__(level) if self.left else ''
@@ -108,11 +112,28 @@ class BinaryTree(Tree):
             new_leaves = []
             for leaf in leaves:
                 if leaf:
-                    new_leaves.append(leaf.left)
-                    new_leaves.append(leaf.right)
+                    if leaf.left:
+                        new_leaves.append(leaf.left)
+                    if leaf.right:
+                        new_leaves.append(leaf.right)
             level += 1
             leaves = new_leaves
-        return level
+        return level-1
+
+    def getLevel(self, lvl):
+        leaves = [self.root]
+        level = 0
+        while level < lvl and leaves:
+            new_leaves = []
+            for leaf in leaves:
+                if leaf:
+                    if leaf.left:
+                        new_leaves.append(leaf.left)
+                    if leaf.right:
+                        new_leaves.append(leaf.right)
+            level += 1
+            leaves = new_leaves
+        return leaves
 
     def checkPointers(self):
         seen = {}
@@ -197,7 +218,7 @@ class BinarySearchTree(BinaryTree):
             return self.stringify(self.root)
 
     def stringify(self, node, level=0):
-        ret = '. ' * level+repr(node.key)+"\n"
+        ret = '. ' * level+repr(node)+"\n"
         if node.left:
             ret += self.stringify(node.left, level+1)
         else:
@@ -233,16 +254,16 @@ class SplayTree(BinarySearchTree):
         while node.parent:
             #print('height:', self.height(node))
             if node.parent.parent is None:
+#                print('zig', end=' ')
                 node.rotate()
-                #print('zig')
             elif (node.isLeft(node.parent) and node.parent.isLeft(node.parent.parent)) or (node.isRight(node.parent) and node.parent.isRight(node.parent.parent)):
+#                print('zig-zig', end=' ')
                 node.parent.rotate()
                 node.rotate()
-                #print('zig-zig')
             else:
+#                print('zig-zag', end=' ')
                 node.rotate()
                 node.rotate()
-                #print('zig-zag')
         self.root = node
 
 class RangeTree(BinarySearchTree):
@@ -315,9 +336,8 @@ def treeRace():
 
     Then: fill in for range(1,k) where k < m
     '''
-    n = 1000
-    m = 100
-    k = n/100
+    n = 1000000
+    m = 10000
 
     bst = BinarySearchTree()
     splay = SplayTree()
@@ -374,7 +394,66 @@ def treeRace():
     print("{} uniform random numbers, random load / subset access (<.2)".format(n))
     treeCompare(load, uniform_rand * 5)
     '''
-treeRace()
+
+def compareDepthAccessTimes(n = 10000):
+    '''Written in an effort to optimize Splay tree, which seems to be losing to
+    BST more often than not even in non-random access sequences'''
+    bst = BinarySearchTree()
+    splay = SplayTree()
+
+    seq = [i for i in range(n)]
+    np.random.shuffle(seq)
+    for num in seq:
+        bst.insert(num)
+        splay.insert(num)
+    print(bst)
+    bst_series = []
+    splay_series = []
+    k = min(bst.height(), splay.height())
+    for i in range(k):
+        bst_key = bst.getLevel(i)[0].key
+        level = splay.getLevel(i)
+        if level:
+            splay_key = level[0].key
+        else:
+            break
+        t0 = time.time()
+        bst.search(bst_key)
+        t1 = time.time()
+        splay.search(splay_key)
+        t2 = time.time()
+        bst_series.append((t1-t0)*1000)
+        splay_series.append((t2-t1)*1000)
+    df = DataFrame()
+    df['BST'] = bst_series
+    df['Splay'] = splay_series
+    df.plot(title="BST and Splay access time by depth for trees of {} items".format(n))
+    plt.xlabel('depth')
+    plt.ylabel('ms')
+    plt.show()
+
+compareDepthAccessTimes()
+#treeRace()
+splay = SplayTree()
+seq = []
+for i in range(100):
+    seq.append(i)
+np.random.shuffle(seq)
+#print(seq)
+for num in seq:
+    splay.insert(num)
+
+i = 0
+level = splay.getLevel(i)
+while level:
+#    print('depth', i)
+    key = level[0].key
+#    print('key', key)
+#    print(splay)
+    splay.search(key)
+#    print('\n')
+    i += 1
+    level = splay.getLevel(i)
 
 '''
 #interesting attempt to print tree structure
