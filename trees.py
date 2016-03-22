@@ -12,19 +12,19 @@ rcParams['figure.figsize'] = 15, 10
 plt.style.use('fivethirtyeight')
 
 class TreeNode(object):
-    def __init__(self, key, val=True, children=[], parent=None, data=None):
+    def __init__(self, key, val=True, children=[], parent=None, data={}):
         self.key = key
         self.val = val
-        self.children = children
+        self._children = children
         self.parent = parent
         self.data = data
 
     def children(self):
-        return self.children
+        return self._children
 
 class BinaryTreeNode(TreeNode):
-    def __init__(self, key, val=True, left=None, right=None, parent=None, data=None):
-        super.__init__(key, val, parent=parent, data=data)
+    def __init__(self, key, val=True, left=None, right=None, parent=None, data={}):
+        super().__init__(key, val, parent=parent, data=data)
         self.left = left
         self.right = right
 
@@ -89,6 +89,8 @@ class BinaryTreeNode(TreeNode):
         #TODO: awkward, fix this
         if self.val is not True and self.val is not None:
             return str('{}:{}'.format(self.key, self.val))
+        if self.data.items():
+            return str('{}:{}'.format(self.key, self.data))
         return str(self.key)
 
 '''TODO: add these functions to all trees (from https://en.wikipedia.org/wiki/Tree_(data_structure))
@@ -105,9 +107,29 @@ class Tree(object):
     def __init__(self):
         self.root = None
 
+    def depth(self, node):
+        if not node:
+            return None
+        ret = 0
+        while node.parent:
+            node = node.parent
+            ret += 1
+        return ret
+
+    def updateHeight(self, node):
+        if node:
+            left = self.updateHeight(node.left)
+            right = self.updateHeight(node.right)
+            node.data['height'] = max(left, right)+1
+            return node.data['height']
+        return -1
+
     def height(self, node=None):
         if not node:
-            node = self.root
+            return -1
+        if 'height' in node.data:
+            return node.data['height']
+        print('computing height')
         leaves = [node]
         level = 0
         while len(leaves) > 0:
@@ -148,7 +170,7 @@ class Tree(object):
                             return False
                         else:
                             new_leaves.append(child)
-                        if leaf.left.parent != leaf:
+                        if child.parent != leaf:
                             print ('erroneous back-pointer:{0}->{1}'.format(leaf.key, child.key))
                             return False
                 seen[leaf] = True
@@ -170,31 +192,23 @@ class BinarySearchTree(Tree):
                         print('Nope: {} < {} is wrong'.format(leaf.right, leaf))
                         return False
                         new_leaves.append(leaf.right)
-                        if leaf.left:
-                            if leaf.left.key > leaf.key:
-                                print("Nope: {} > {} is wrong.".format(leaf.left, leaf))
-                                return False
-                                new_leaves.append(leaf.left)
-                                leaves = new_leaves
-                                print("This tree is searchable, yay!")
-                                return True
+                if leaf.left:
+                    if leaf.left.key > leaf.key:
+                        print("Nope: {} > {} is wrong.".format(leaf.left, leaf))
+                        return False
+                        new_leaves.append(leaf.left)
+            leaves = new_leaves
+        print("This tree is searchable, yay!")
+        return True
 
-    def depth(self, key):
-        node = BinarySearchTree.search(self, key)
-        if not node:
-            return -1
-        ret = 0
-        while node.parent:
-            node = node.parent
-            ret += 1
-        return ret
-
-    def insert(self, key, val=True):
+    def insert(self, key, val=True, data={}):
         if self.root is None:
-            self.root = BinaryTreeNode(key, val)
+            self.root = BinaryTreeNode(key, val, data=data)
             return self.root
         else:
-            return self.insertRecursively(key, val, self.root)
+            node = self.insertRecursively(key, val, self.root)
+            node.data = data
+            return node
 
     def insertRecursively(self, key, val, node):
         if key > node.key:
@@ -264,9 +278,10 @@ class SplayTree(BinarySearchTree):
        Conjectured to be dynamically optimal, but this implementation generally
        performs at least slightly worse than a regular BST.
     '''
-    def search(self, key):
+    def search(self, key, splay=True):
         node = BinarySearchTree.search(self, key)
-        self.splay(node)
+        if splay:
+            self.splay(node)
         return node
 
     def splay(self, node):
@@ -322,9 +337,60 @@ class RedBlackTree(BinarySearchTree):
     pass
 
 class AVLTree(BinarySearchTree):
-    pass
+    #AVL property: height difference between left and right subtrees no greater than 1
+    def insert(self, key, val=True):
+        node = BinarySearchTree.insert(self, key, val, data={'height':0})
+        self.fixAVL(node)
+
+    def fixAVL(self, node):
+        #print(self)
+        while node and node.parent:
+            self.updateHeight(node.parent)
+            parent_balance = self.height(node.parent.left) - self.height(node.parent.right)
+            node_balance = self.height(node.left) - self.height(node.right)
+            if parent_balance > 1: #left-heavy
+                #if node is right-heavy: zig-zag
+                if node_balance < 0:
+                    #print('left-right')
+                    self.rotate(node.right.key)
+                    self.rotate(node.parent.key)
+                else:
+                    self.rotate(node.key)
+            elif parent_balance < -1: #right-heavy
+                #if node is left-heavy: zig-zag
+                if node_balance > 0:
+                    #print('right-left')
+                    self.rotate(node.left.key)
+                    #print(self)
+                    #print(node, node.parent)
+                    self.rotate(node.parent.key)
+                    #print(self)
+                else:
+                    self.rotate(node.key)
+            node = node.parent
+        self.updateHeight(self.root)
+        #print(self)
+
+    def checkAVL(self, node):
+        self.updateHeight(node)
+        if abs(self.height(node.left) - self.height(node.right)) <= 1:
+            print('Root node subtrees have height {} and {}, satisfying AVL.'.format(self.height(node.left), self.height(node.right)))
+            return True
+        print('Nope! Root node subtrees have height {} and {}.'.format(self.height(node.left), self.height(node.right)))
+        return False
+
+    def check(self):
+        return super().check() and self.checkAVL(self.root)
 
 class BTree(Tree):
+    pass
+
+class FusionTree(BTree):
+    '''A B-tree with branching factor w**(1/5). Distinguishes k=O(w**1/5) keys by thinking of them as a path denoted by a bitstring. Look at the branching nodes to distinguish leaves.
+    '''
+    pass
+
+class VanEmdeBoas():
     pass
 
 class Quadtree(Tree):
@@ -493,3 +559,7 @@ classes = inspect.getmembers(sys.modules[__name__], inspect.isclass)
 print('Test class functions: ', ', '.join([f[0] for f in functions]))
 print('Classes: ', ', '.join([c[0] for c in classes]))
 print('Currently implemented: SplayTree and BinarySearchTree')
+
+avl = AVLTree()
+for key in [41, 65, 50, 20, 11, 29, 26, 23]:
+    avl.insert(key)
