@@ -393,6 +393,9 @@ class FusionTree(BTree):
 class VanEmdeBoas():
     pass
 
+class FusionTree():
+    pass
+
 class Quadtree(Tree):
     ''''''
     pass
