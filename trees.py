@@ -5,11 +5,6 @@ import inspect
 import random
 import pandas as pd
 
-import matplotlib.pyplot as plt
-
-from pylab import rcParams
-rcParams['figure.figsize'] = 15, 10
-plt.style.use('fivethirtyeight')
 
 class TreeNode(object):
     def __init__(self, key, val=True, children=[], parent=None, data={}):
@@ -93,15 +88,46 @@ class BinaryTreeNode(TreeNode):
             return str('{}:{}'.format(self.key, self.data))
         return str(self.key)
 
+class QuadtreeNode(TreeNode):
+    '''A quadtree node contains the range over which it spans, stores any points it directly contains in its bucket, and stores all other points indirectly through its four quadrant children.'''
+    def __init__(self, x, y, bucket, NW=None, NE=None, SE=None, SW=None, parent=None, data={}):
+        super().__init__(key, val, parent=parent, data=data)
+        self.NW = NW
+        self.NE = NE
+        self.SW = SW
+        self.SE = SE
+
+    def children(self):
+        return [self.NW, self.NE, self.SE, self.SW]
+
+    def setChild(self, node, which=''):
+        if which == '':
+            print('setChild() failed: child must be specified.')
+            return
+        if which=='NW':
+            if self.NW and self.NW.parent is self:
+                self.NW.parent = None
+            self.NW = node
+        elif which=='NE':
+            if self.NE and self.NE.parent is self:
+                self.NE.parent = None
+            self.NE = node
+        elif which=='SE':
+            if self.SE and self.SE.parent is self:
+                self.SE.parent = None
+            self.SE = node
+        elif which=='SW':
+            if self.SW and self.SW.parent is self:
+                self.SW.parent = None
+            self.SW = node
+        if node:
+            node.parent = self
+
 '''TODO: add these functions to all trees (from https://en.wikipedia.org/wiki/Tree_(data_structure))
 Enumerating all the items
 Enumerating a section of a tree
-Searching for an item
-Adding a new item at a certain position on the tree
-Deleting an item
 Pruning: Removing a whole section of a tree
 Grafting: Adding a whole section to a tree
-Finding the root for any node
 '''
 class Tree(object):
     def __init__(self):
@@ -144,6 +170,7 @@ class Tree(object):
         return level-1
 
     def getLevel(self, lvl):
+        '''Return all leaves at a specified depth'''
         leaves = [self.root]
         level = 0
         while level < lvl and leaves:
@@ -158,6 +185,7 @@ class Tree(object):
         return leaves
 
     def checkTreeProperty(self):
+        '''Check that all nodes have only one or zero parents, and ensure pointers to and from parents match.'''
         seen = {}
         leaves = [self.root]
         while leaves:
@@ -377,6 +405,7 @@ class AVLTree(BinarySearchTree):
         return super().check() and self.checkAVL(self.root)
 
 class BTree(Tree):
+    '''Generalizes binary search trees and is self-balancing. Optimized for reading and writing large blocks of data.'''
     pass
 
 class FusionTree(BTree):
@@ -384,15 +413,28 @@ class FusionTree(BTree):
     '''
     pass
 
-class VanEmdeBoas():
-    pass
-
-class FusionTree():
+class VanEmdeBoasTree():
+    '''A tree with an associative array with m-bit integer keys. Is able to contain up to 2^m items, and performs all operations in O(log m) time regardless of the number of elements in the tree.
+    '''
     pass
 
 class Quadtree(Tree):
-    ''''''
-    pass
+    '''A tree in which each internal node has exactly four children, usually to partition two-dimentional space.'''
+
+    def __init__(self, x1, y1, x2, y2):
+        self.root = QuadtreeNode()
+        self.root.addChild()
+
+    def insert(self, x, y, val=True, data={}):
+        '''Recursively choose subdivisions of the given space until we find a subdivision that can hold our value.'''
+        node = ((x,y), val, data)
+        pass
+
+    def search(self, x, y):
+        pass
+
+    def searchRecursively(self, x, y, node):
+
 
 class Octree(Tree):
     ''''''

@@ -1,4 +1,10 @@
 from trees import *
+import matplotlib.pyplot as plt
+
+#size and styling of the output graph
+from pylab import rcParams
+rcParams['figure.figsize'] = 15, 10
+plt.style.use('fivethirtyeight')
 
 class Test(object):
     def treeCompare(load_seq, access_seq):
