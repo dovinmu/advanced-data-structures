@@ -89,16 +89,53 @@ class BinaryTreeNode(TreeNode):
         return str(self.key)
 
 class QuadtreeNode(TreeNode):
-    '''A quadtree node contains the range over which it spans, stores any points it directly contains in its bucket, and stores all other points indirectly through its four quadrant children.'''
-    def __init__(self, x, y, bucket, NW=None, NE=None, SE=None, SW=None, parent=None, data={}):
+    '''A quadtree node contains the range over which it spans, stores any points it directly contains in its bucket, and stores all other points indirectly through its four quadrant children.
+    '''
+    def __init__(self, x1, y1, x2, y2, val=True, NW=None, NE=None, SE=None, SW=None, parent=None, data={}):
+        key = (x1,y1,x2,y2)
         super().__init__(key, val, parent=parent, data=data)
         self.NW = NW
         self.NE = NE
         self.SW = SW
         self.SE = SE
 
+        #self.topleft = (x1, y1)
+        #self.botright =  (x2, y2)
+        self.x1 = x1
+        self.y1 = y1
+        self.x2 = x2
+        self.y2 = y2
+
+        self.bucket = []
+
     def children(self):
         return [self.NW, self.NE, self.SE, self.SW]
+
+    def addPoint(self, x, y):
+        if len(self.bucket) < 1:
+            self.bucket.append((x,y))
+        else:
+            xDivide = (self.x2 - self.x1) / 2
+            yDivide = (self.y2 - self.y1) / 2
+            if x < xDivide:
+                if y < yDivide:
+                    if not self.NW:
+                        self.setChild(QuadtreeNode(self.x1, self.y1, xDivide, yDivide), 'NW')
+                    self.NW.addPoint(x, y)
+                else:
+                    if not self.SW:
+                        self.setChild(QuadtreeNode(self.x1, yDivide, xDivide, self.y2), 'SW')
+                    self.SW.addPoint(x, y)
+            else:
+                if y < yDivide:
+                    if not self.NE:
+                        self.setChild(QuadtreeNode(xDivide, self.y1, self.x2, yDivide), 'NE')
+                    self.NE.addPoint(x, y)
+                else:
+                    if not self.SE:
+                        self.setChild(QuadtreeNode(xDivide, yDivide, self.x2, self.y2), 'SE')
+                    self.SE.addPoint(x, y)
+
 
     def setChild(self, node, which=''):
         if which == '':
@@ -434,7 +471,7 @@ class Quadtree(Tree):
         pass
 
     def searchRecursively(self, x, y, node):
-
+        pass
 
 class Octree(Tree):
     ''''''
