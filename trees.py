@@ -160,6 +160,13 @@ class QuadtreeNode(TreeNode):
         if node:
             node.parent = self
 
+    def pointCount(self):
+        return len(self.bucket) + (self.NW.pointCount() if self.NW else 0) + (self.NE.pointCount() if self.NE else 0) + (self.SE.pointCount() if self.SE else 0) + (self.SW.pointCount() if self.SW else 0)
+
+    def __repr__(self):
+        return "self: {}, NW: {}, NE: {}, SE: {}, SW: {}".format(len(self.bucket),
+        self.NW.pointCount() if self.NW else 0, self.NE.pointCount() if self.NE else 0, self.SE.pointCount() if self.SE else 0, self.SW.pointCount() if self.SW else 0)
+
 '''TODO: add these functions to all trees (from https://en.wikipedia.org/wiki/Tree_(data_structure))
 Enumerating all the items
 Enumerating a section of a tree
@@ -333,7 +340,6 @@ class BinarySearchTree(Tree):
         return ret
 
 
-
 class SplayTree(BinarySearchTree):
     '''In a splay tree, accessing a node x of a BST brings it to the root.
        Thus, recently accessed items are quick to access again.
@@ -459,19 +465,41 @@ class Quadtree(Tree):
     '''A tree in which each internal node has exactly four children, usually to partition two-dimentional space.'''
 
     def __init__(self, x1, y1, x2, y2):
-        self.root = QuadtreeNode()
-        self.root.addChild()
+        self.root = QuadtreeNode(x1, y1, x2, y2)
 
     def insert(self, x, y, val=True, data={}):
         '''Recursively choose subdivisions of the given space until we find a subdivision that can hold our value.'''
-        node = ((x,y), val, data)
-        pass
+        self.root.addPoint(x,y)
 
     def search(self, x, y):
-        pass
+        return self.searchRecursively(x, y, self.root)
 
     def searchRecursively(self, x, y, node):
-        pass
+        if (x,y) in node.bucket:
+            return node
+        xDivide = (node.x2 - node.x1) / 2
+        yDivide = (node.y2 - node.y1) / 2
+        if x < xDivide:
+            if y < yDivide:
+                if node.NW is None:
+                    return None
+                return self.searchRecursively(x, y, node.NW)
+            else:
+                if node.SW is None:
+                    return None
+                return self.searchRecursively(x, y, node.SW)
+        else:
+            if y < yDivide:
+                if node.NE is None:
+                    return None
+                return self.searchRecursively(x, y, node.NE)
+            else:
+                if node.SE is None:
+                    return None
+                return self.searchRecursively(x, y, node.SE)
+
+    def __repr__(self):
+        return repr(self.root)
 
 class Octree(Tree):
     ''''''
