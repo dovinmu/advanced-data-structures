@@ -3,8 +3,7 @@ import numpy as np
 import sys
 import inspect
 import random
-import pandas as pd
-
+import math
 
 class TreeNode(object):
     def __init__(self, key, val=True, children=[], parent=None, data={}):
@@ -458,8 +457,37 @@ class FusionTree(BTree):
 
 class VanEmdeBoasTree():
     '''A tree with an associative array with m-bit integer keys. Is able to contain up to 2^m items, and performs all operations in O(log m) time regardless of the number of elements in the tree.
+
+    U: the size of the universe of integer keys that are allowed. Searches and inserts will take O(log log U) time.
     '''
-    pass
+    def __init__(self, U):
+        self.summary = None
+        self.min = None
+        self.max = None
+        self.U = U
+
+    def _high(self, el, U):
+        '''Get the cluster that the element would appear in.'''
+        return int(el / math.sqrt(U))
+
+    def _low(self, el, U):
+        return el % int(math.sqrt(U))
+
+    def delete(self, el):
+        pass
+
+    def predecessor(self, el):
+        pass
+
+    def successor(self, el):
+        pass
+
+    def insert(self, el):
+        pass
+
+    def delete(self, el):
+        pass
+
 
 class Quadtree(Tree):
     '''A tree in which each internal node has exactly four children, usually to partition two-dimentional space.'''

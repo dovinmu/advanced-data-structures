@@ -1,5 +1,6 @@
 from trees import *
 import matplotlib.pyplot as plt
+import pandas as pd
 
 #size and styling of the output graph
 from pylab import rcParams
@@ -121,11 +122,4 @@ functions = inspect.getmembers(Test, inspect.isfunction)
 classes = inspect.getmembers(sys.modules[__name__], inspect.isclass)
 print('Test class functions: ', ', '.join([f[0] for f in functions]))
 print('Classes: ', ', '.join([c[0] for c in classes]))
-print('Currently implemented: SplayTree and BinarySearchTree')
-
-avl = AVLTree()
-for key in [41, 65, 50, 20, 11, 29, 26, 23]:
-    avl.insert(key)
-print('avl:', avl.checkAVL(avl.root))
-print(avl)
-avl.fixAVL(avl.root)
+print('Currently implemented: SplayTree, BinarySearchTree, AVLTree')
