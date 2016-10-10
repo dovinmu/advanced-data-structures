@@ -195,6 +195,8 @@ class Tree(object):
 
     def height(self, node=None):
         if not node:
+            if self.root:
+                return self.height(self.root)
             return -1
         if 'height' in node.data:
             return node.data['height']
@@ -340,13 +342,14 @@ class BinarySearchTree(Tree):
 
 
 class SplayTree(BinarySearchTree):
+
     '''In a splay tree, accessing a node x of a BST brings it to the root.
        Thus, recently accessed items are quick to access again.
        Insertion, look-up and removal are O(logn) amortized. For sequences
        of non-random operations, splay trees perform better than normal BSTs.
 
-       Conjectured to be dynamically optimal, but this implementation generally
-       performs at least slightly worse than a regular BST.
+       Conjectured to be dynamically optimal! However, it's only faster than a
+       (non-balanced) BST when operating on a tiny subset of elements.
     '''
     def search(self, key, splay=True):
         node = BinarySearchTree.search(self, key)
@@ -356,15 +359,10 @@ class SplayTree(BinarySearchTree):
 
     def splay(self, node):
         while node.parent:
-            #print('height:', self.height(node))
             grandparent = node.parent.parent
             if not grandparent:
-#                print('zig', end=' ')
                 node.rotate()
             elif node.isLeft(node.parent) and node.parent.isLeft(grandparent):
-                #print('zig-zig', end=' ')
-                #node.parent.rotate()
-                #node.rotate()
                 B = node.right
                 C = node.parent.right
                 node.setRight(node.parent)
@@ -379,9 +377,6 @@ class SplayTree(BinarySearchTree):
                 node.right.setRight(grandparent)
                 grandparent.setLeft(C)
             elif node.isRight(node.parent) and node.parent.isRight(grandparent):
-#                print('zig-zig', end=' ')
-                #node.parent.rotate()
-                #node.rotate()
                 B = node.parent.left
                 C = node.left
                 node.setLeft(node.parent)
@@ -396,7 +391,6 @@ class SplayTree(BinarySearchTree):
                 node.left.setLeft(grandparent)
                 grandparent.setRight(B)
             else:
-#                print('zig-zag', end=' ')
                 node.rotate()
                 node.rotate()
         self.root = node
@@ -466,14 +460,17 @@ class VanEmdeBoasTree():
         self.max = None
         self.U = U
 
-    def _high(self, el, U):
+    def high(self, el, U):
         '''Get the cluster that the element would appear in.'''
         return int(el / math.sqrt(U))
 
-    def _low(self, el, U):
+    def low(self, el, U):
         return el % int(math.sqrt(U))
 
     def delete(self, el):
+        raise Exception()
+        if el == self.min:
+            pass
         pass
 
     def predecessor(self, el):
@@ -483,7 +480,10 @@ class VanEmdeBoasTree():
         pass
 
     def insert(self, el):
-        pass
+        idx = high(el, self.U)
+        if idx not in self.clusters:
+            pass #instantiate cluster
+        self.clusters[idx].insert(el)
 
     def delete(self, el):
         pass
@@ -539,7 +539,9 @@ class PrefixTree(Tree):
 
 class RangeTree(BinarySearchTree):
     '''
-    A range tree on a set of 1-dimensional points is a balanced binary search tree on those points. The points stored in the tree are stored in the leaves of the tree; each internal node stores the largest value contained in its left subtree. A range tree on a set of points in d-dimensions is a recursively defined multi-level binary search tree. Each level of the data structure is a binary search tree on one of the d-dimensions. The first level is a binary search tree on the first of the d-coordinates. Each vertex v of this tree contains an associated structure that is a (d−1)-dimensional range tree on the last (d−1)-coordinates of the points stored in the subtree of v.
+    A range tree on a set of 1-dimensional points is a balanced binary search tree on those points. The points stored in the tree are stored in the leaves of the tree; each internal node stores the largest value contained in its left subtree.
+
+    A range tree on a set of points in d-dimensions is a recursively defined multi-level binary search tree. Each level of the data structure is a binary search tree on one of the d-dimensions. The first level is a binary search tree on the first of the d-coordinates. Each vertex v of this tree contains an associated structure that is a (d−1)-dimensional range tree on the last (d−1)-coordinates of the points stored in the subtree of v.
     '''
     def __init__(d):
         raise NotImplementedError()
