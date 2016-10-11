@@ -1,6 +1,7 @@
 from trees import *
 import matplotlib.pyplot as plt
 import pandas as pd
+import random
 
 #size and styling of the output graph
 from pylab import rcParams
@@ -78,45 +79,37 @@ class Test(object):
         plt.title("{}".format(names))
         plt.show()
 
-    def compareDepthAccessTimes(self, n = 10000):
-        '''Written in an effort to optimize Splay tree, which seems to be losing to
-        BST more often than not even in non-random access sequences'''
-        bst = BinarySearchTree()
-        splay = SplayTree()
+    def compareDepthAccessTimes(self, n = 100000):
+        '''Plot the time it takes to access an element by depth'''
 
-        seq = [i for i in range(n)]
-        np.random.shuffle(seq)
-        print('inerting {} values'.format(n))
-        for num in seq:
-            bst.insert(num)
-            splay.insert(num)
-        #print(bst)
-        bst_series = []
-        splay_series = []
-        k = min(bst.height(), splay.height())
-        print('timing access from depth 0 to depth {}'.format(k))
-        for i in range(k):
-            bst_key = bst.getLevel(i)[0].key
-            level = splay.getLevel(i)
-            if level:
-                splay_key = level[0].key
-            else:
-                break
-            t0 = time.time()
-            bst.search(bst_key)
-            t1 = time.time()
-            splay.search(splay_key)
-            t2 = time.time()
-            bst_series.append((t1-t0)*1000)
-            splay_series.append((t2-t1)*1000)
-        df = pd.DataFrame()
-        df['BST'] = bst_series
-        df['Splay'] = splay_series
-        df.plot(title="BST and Splay access time by depth for trees of {} items".format(n))
+        seq = self.insertRandomElements(n)
+
+        k = max([tree.height() for tree in self.tree_dict.values()])
+        for name,tree in self.tree_dict.items():
+            tree_series = []
+            print('timing access from depth 0 to depth {}'.format(k))
+            for i in range(k):
+                total_time = 0
+                times_sampled = 10
+                for j in range(times_sampled):
+                    level = tree.getLevel(i)
+                    if level:
+                        tree_key = random.choice(level).key
+                    else:
+                        break
+                    t0 = time.time()
+                    tree.search(tree_key)
+                    t1 = time.time()
+                    total_time += (t1-t0)
+                tree_series.append((total_time/times_sampled)*1000*1000)
+
+            tree_series = pd.Series(tree_series)
+            tree_series.plot(label=name)
+        plt.title("Access time by depth for trees of {}k items".format(n/1000))
         plt.xlabel('depth')
-        plt.ylabel('ms')
+        plt.ylabel('microseconds')
+        plt.legend()
         plt.show()
-
 
 '''
 #interesting attempt to print tree structure
@@ -134,4 +127,4 @@ print('Classes: ', ', '.join([c[0] for c in classes]))
 print('Currently implemented: SplayTree, BinarySearchTree, AVLTree')
 
 test = Test({'AVLTree':AVLTree(), 'BST':BinarySearchTree(), 'SplayTree': SplayTree()})
-test.dynamicOptimalityRace()
+test.compareDepthAccessTimes()
