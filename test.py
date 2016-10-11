@@ -8,15 +8,17 @@ rcParams['figure.figsize'] = 15, 10
 plt.style.use('fivethirtyeight')
 
 class Test(object):
-
-
+    def __init__(self, tree_dict=None):
+        if not tree_dict:
+            self.tree_dict = {'BST':BinarySearchTree(), 'SplayTree':SplayTree()}
+        else:
+            self.tree_dict = tree_dict
 
     def treeCompare(self, load_seq, access_seq):
-        tree_dict = {'BST':BinarySearchTree(), 'SplayTree':SplayTree()}
-        for name,tree in tree_dict.items():
+        for name,tree in self.tree_dict.items():
             for item in load_seq:
                 tree.insert(item)
-        for name,tree in tree_dict.items():
+        for name,tree in self.tree_dict.items():
             t0 = time.time()
             for item in access_seq:
                 tree.search(item)
@@ -29,17 +31,18 @@ class Test(object):
 
         seq = [i for i in range(n)]
         np.random.shuffle(seq)
-        print('inerting {} values'.format(n))
-        for num in seq:
-            bst.insert(num)
-            splay.insert(num)
-        #print(bst)
-        print('levels of the splay tree')
-        for lvl in range(splay.height()):
-            print('level {}: {}'.format(lvl, len(splay.getLevel(lvl))))
+        for name,tree in self.tree_dict:
+            print('inerting {} shuffled values into {}'.format(n, name))
+            for num in seq:
+                tree.insert(num)
 
+        for name,tree in self.tree_dict:
+            print('levels of {}'.format(name))
+            for lvl in range(splay.height()):
+                print('level {}: {}'.format(lvl, len(splay.getLevel(lvl))))
+        names = ','.join(self.tree_dict.keys()[:-1]) + ', and ' + self.tree_dict.keys()[-1]
+        print('Racing {} on access times for a reapeating subset of {}\% of {}k total inserted elements.'.format(names, subset_percent, int(n/100)/10))
 
-        print('Racing Splay Tree vs Binary Search Tree (unbalanced, but randomly built) on access times for a reapeating subset of {}\% of {}k total inserted elements.'.format(subset_percent, int(n/100)/10))
         np.random.shuffle(seq)
         splay_series = []
         splay_time = []

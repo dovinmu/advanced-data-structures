@@ -200,7 +200,7 @@ class Tree(object):
             return -1
         if 'height' in node.data:
             return node.data['height']
-        print('computing height')
+        #print('computing height')
         leaves = [node]
         level = 0
         while len(leaves) > 0:
@@ -398,9 +398,14 @@ class SplayTree(BinarySearchTree):
 #challenge: given x, cut a tree into two red-black trees with one
 #tree's values < x and one trees's values > x
 class RedBlackTree(BinarySearchTree):
-    pass
+    def __init__(self):
+        raise NotImplementedError()
 
 class AVLTree(BinarySearchTree):
+
+    def __init__(self):
+        raise NotImplementedError()
+
     #AVL property: height difference between left and right subtrees no greater than 1
     def insert(self, key, val=True):
         node = BinarySearchTree.insert(self, key, val, data={'height':0})
@@ -442,12 +447,14 @@ class AVLTree(BinarySearchTree):
 
 class BTree(Tree):
     '''Generalizes binary search trees and is self-balancing. Optimized for reading and writing large blocks of data.'''
-    pass
+    def __init__(self):
+        raise NotImplementedError()
 
 class FusionTree(BTree):
     '''A B-tree with branching factor w**(1/5). Distinguishes k=O(w**1/5) keys by thinking of them as a path denoted by a bitstring. Look at the branching nodes to distinguish leaves.
     '''
-    pass
+    def __init__(self):
+        raise NotImplementedError()
 
 class VanEmdeBoasTree():
     '''A tree with an associative array with m-bit integer keys. Is able to contain up to 2^m items, and performs all operations in O(log m) time regardless of the number of elements in the tree.
@@ -455,6 +462,8 @@ class VanEmdeBoasTree():
     U: the size of the universe of integer keys that are allowed. Searches and inserts will take O(log log U) time.
     '''
     def __init__(self, U):
+        raise NotImplementedError()
+
         self.summary = None
         self.min = None
         self.max = None
@@ -493,6 +502,8 @@ class Quadtree(Tree):
     '''A tree in which each internal node has exactly four children, usually to partition two-dimentional space.'''
 
     def __init__(self, x1, y1, x2, y2):
+        raise NotImplementedError()
+
         self.root = QuadtreeNode(x1, y1, x2, y2)
 
     def insert(self, x, y, val=True, data={}):
@@ -531,11 +542,13 @@ class Quadtree(Tree):
 
 class Octree(Tree):
     ''''''
-    pass
+    def __init__(self):
+        raise NotImplementedError()
 
 class PrefixTree(Tree):
     '''Also known as a Trie.'''
-    pass
+    def __init__(self):
+        raise NotImplementedError()
 
 class RangeTree(BinarySearchTree):
     '''
