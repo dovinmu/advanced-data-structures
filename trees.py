@@ -45,6 +45,34 @@ class BinaryTreeNode(TreeNode):
     def isRight(self, node):
         return node and node.right is self
 
+    def updateHeightToRoot(self):
+        left = right = -1
+        if self.left:
+            left = self.left.data['height']
+        if self.right:
+            right = self.right.data['height']
+        self.data['height'] = max(left, right)+1
+        if self.parent:
+            self.parent.updateHeightToRoot()
+
+    def updateHeightToLeaves(self):
+        left = right = -1
+        if self.left:
+            left = self.left.updateHeight()
+        if self.right:
+            right = self.right.updateHeight()
+        self.data['height'] = max(left, right)+1
+        return self.data['height']
+
+    def updateHeight(self):
+        left = right = -1
+        if self.left:
+            left = self.left.data['height']
+        if self.right:
+            right = self.right.data['height']
+        self.data['height'] = max(left, right)+1
+        return self.data['height']
+
     def rotate(self):
         if self.parent is None:
             print("cannot rotate on a root!")
@@ -185,22 +213,13 @@ class Tree(object):
             ret += 1
         return ret
 
-    def updateHeight(self, node):
-        if node:
-            left = self.updateHeight(node.left)
-            right = self.updateHeight(node.right)
-            node.data['height'] = max(left, right)+1
-            return node.data['height']
-        return -1
-
-    def height(self, node=None):
+    def heightOf(self, node=None):
+        '''Get the height of the given node'''
         if not node:
-            if self.root:
-                return self.height(self.root)
             return -1
         if 'height' in node.data:
             return node.data['height']
-        #print('computing height')
+        print('computing height')
         leaves = [node]
         level = 0
         while len(leaves) > 0:
@@ -213,6 +232,12 @@ class Tree(object):
             level += 1
             leaves = new_leaves
         return level-1
+
+    def height(self):
+        '''Get the height of the tree'''
+        if self.root:
+            return self.heightOf(self.root)
+        raise Exception('Root not found')
 
     def getLevel(self, lvl):
         '''Return all leaves at a specified depth'''
@@ -316,13 +341,13 @@ class BinarySearchTree(Tree):
         elif key < node.key and node.left:
             return self.searchRecursively(key, node.left)
         return None
-
+    '''
     def rotate(self, key):
         node = self.search(key)
         node.rotate()
         if node.parent is None:
             self.root = node
-
+    '''
     def __repr__(self):
         if self.root:
             return self.stringify(self.root)
@@ -403,39 +428,75 @@ class RedBlackTree(BinarySearchTree):
 
 class AVLTree(BinarySearchTree):
 
-    def __init__(self):
-        raise NotImplementedError()
+    #def __init__(self):
+    #    raise NotImplementedError()
 
     #AVL property: height difference between left and right subtrees no greater than 1
     def insert(self, key, val=True):
         node = BinarySearchTree.insert(self, key, val, data={'height':0})
+        node.updateHeightToRoot()
         self.fixAVL(node)
 
     def fixAVL(self, node):
+        #print('fix avl')
         while node and node.parent:
-            self.updateHeight(node.parent)
-            parent_balance = self.height(node.parent.left) - self.height(node.parent.right)
-            node_balance = self.height(node.left) - self.height(node.right)
-            if parent_balance > 1: #parent is left-heavy
-                #if node is right-heavy: zig-zag
-                if node_balance < 0:
-                    #print('left-right')
-                    self.rotate(node.right.key)
-                    self.rotate(node.parent.key)
+            #node.parent.updateHeight()
+            node.updateHeight()
+            node.parent.updateHeight()
+
+            parent_balance = self.heightOf(node.parent.left) - self.heightOf(node.parent.right)
+            node_balance = self.heightOf(node.left) - self.heightOf(node.right)
+            #print("parent: {}, balance: {}, node: {}, balance: {}".format(node.parent, parent_balance, node, node_balance))
+            # if parent is left-heavy
+            if parent_balance == 2:
+                # if node is right-heavy: zig-zag
+                if node_balance == -1:
+                    #print('rotating {}'.format(node.right.key))
+                    node.right.rotate()
+                    #print('rotating {}'.format(node.parent.key))
+                    node.parent.rotate()
+                    node.data['height'] -= 1
+                    node.parent.right.data['height'] -= 2
+                    node.parent.data['height'] += 1
+                elif node_balance == 1:
+                    #print('rotating {}'.format(node.key))
+                    node.rotate()
+                    node.right.data['height'] -= 2
+                elif node_balance == 0:
+                    #print(self.stringify(node.parent))
+                    raise Exception('violates AVL property. ' + "parent: {}, balance: {}, node: {}, balance: {}".format(node.parent, parent_balance, node, node_balance))
                 else:
-                    self.rotate(node.key)
-            elif parent_balance < -1: #parent is right-heavy
-                #if node is left-heavy: zig-zag
-                if node_balance > 0:
-                    self.rotate(node.left.key)
-                    self.rotate(node.parent.key)
+                    #print(self.stringify(node.parent))
+                    raise Exception('tree too unbalanced. ' + "parent: {}, balance: {}, node: {}, balance: {}".format(node.parent, parent_balance, node, node_balance))
+            # if parent is right-heavy
+            elif parent_balance == -2:
+                # if node is left-heavy: zig-zag
+                if node_balance == 1:
+                    #print('rotating {}'.format(node.left.key))
+                    node.left.rotate()
+                    #print('rotating {}'.format(node.parent.key))
+                    node.parent.rotate()
+                    node.data['height'] -= 1
+                    node.parent.left.data['height'] -= 2
+                    node.parent.data['height'] += 1
+                elif node_balance == -1:
+                    #print('rotating {}'.format(node.key))
+                    node.rotate()
+                    node.left.data['height'] -= 2
+                elif node_balance == 0:
+                    #print(self.stringify(node.parent))
+                    raise Exception('violates AVL property. ' + "parent: {}, balance: {}, node: {}, balance: {}".format(node.parent, parent_balance, node, node_balance))
                 else:
-                    self.rotate(node.key)
+                    #print(self.stringify(node.parent))
+                    raise Exception('tree too unbalanced. ' + "parent: {}, balance: {}, node: {}, balance: {}".format(node.parent, parent_balance, node, node_balance))
+            elif parent_balance < -2 or parent_balance > 2:
+                #print(self.stringify(node.parent))
+                raise Exception('tree too unbalanced. ' + "parent: {}, balance: {}, node: {}, balance: {}".format(node.parent, parent_balance, node, node_balance))
             node = node.parent
-        self.updateHeight(self.root)
+
 
     def checkAVL(self, node):
-        self.updateHeight(node)
+        node.updateHeight()
         if abs(self.height(node.left) - self.height(node.right)) <= 1:
             print('Root node subtrees have height {} and {}, satisfying AVL.'.format(self.height(node.left), self.height(node.right)))
             return True
