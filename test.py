@@ -1,15 +1,11 @@
 from trees import BinarySearchTree, SplayTree, AVLTree
-# import matplotlib.pyplot as plt
 import pandas as pd
 from pandas import DataFrame, Series
 import random
 import numpy as np
 import time
-
-#size and styling of the output graph
-# from pylab import rcParams
-# rcParams['figure.figsize'] = 15, 10
-# plt.style.use('fivethirtyeight')
+import timeit
+import functools
 
 class TreeTester(object):
     def __init__(self, tree_dict=None):
@@ -99,20 +95,16 @@ class TreeTester(object):
                 tree_series = []
                 total_time = 0
                 times_sampled = 100
-                for j in range(times_sampled):
-                    level = tree.getLevel(i)
-                    if level:
-                        tree_key = random.choice(level).key
-                    else:
-                        break
-                    t0 = time.time()
-                    tree.search(tree_key)
-                    t1 = time.time()
-                    tree_series.append(t1-t0)
-                    total_time += (t1-t0)
-                samples_max[i] = max(tree_series)
-                samples_mean[i] = np.mean(tree_series)
-            tree_dict[name+'_max'] = samples_max
+                level = tree.getLevel(i)
+                if level:
+                    tree_key = random.choice(level).key
+                else:
+                    break
+
+                runtime = timeit.timeit(functools.partial(tree.search, tree_key), number = 1)
+                samples_mean[i] = (runtime)
+
+            # tree_dict[name+'_max'] = samples_max
             tree_dict[name+'_mean'] = samples_mean
         return DataFrame(tree_dict)
 
