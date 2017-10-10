@@ -89,15 +89,14 @@ class TreeTester(object):
                  columns: tree
                  rows: time in microseconds
         '''
-
-        seq = self.insertRandomElements(n)
-
         k = max([tree.height() for tree in self.tree_dict.values()])
         tree_dict = {}
         for name, tree in self.tree_dict.items():
-            tree_series = []
+            samples_max = {}
+            samples_mean = {}
             print('{}: timing access from depth 0 to depth {}'.format(name, k))
             for i in range(k):
+                tree_series = []
                 total_time = 0
                 times_sampled = 100
                 for j in range(times_sampled):
@@ -109,10 +108,12 @@ class TreeTester(object):
                     t0 = time.time()
                     tree.search(tree_key)
                     t1 = time.time()
+                    tree_series.append(t1-t0)
                     total_time += (t1-t0)
-                tree_series.append((total_time/times_sampled)*1000*1000)
-
-            tree_dict[name] = tree_series
+                samples_max[i] = max(tree_series)
+                samples_mean[i] = np.mean(tree_series)
+            tree_dict[name+'_max'] = samples_max
+            tree_dict[name+'_mean'] = samples_mean
         return DataFrame(tree_dict)
 
 '''

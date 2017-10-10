@@ -329,11 +329,9 @@ class BinarySearchTree(Tree):
         if self.root is None:
             return None
         node = self.searchRecursively(key, self.root)
-        #print('got', node)
         return node
 
     def searchRecursively(self, key, node):
-        #print('hit key ', node.key)
         if key == node.key:
             return node
         if key > node.key and node.right:
@@ -341,13 +339,7 @@ class BinarySearchTree(Tree):
         elif key < node.key and node.left:
             return self.searchRecursively(key, node.left)
         return None
-    '''
-    def rotate(self, key):
-        node = self.search(key)
-        node.rotate()
-        if node.parent is None:
-            self.root = node
-    '''
+
     def __repr__(self):
         if self.root:
             return self.stringify(self.root)
