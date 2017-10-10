@@ -1,14 +1,17 @@
-from trees import *
-import matplotlib.pyplot as plt
+from trees import BinarySearchTree, SplayTree, AVLTree
+# import matplotlib.pyplot as plt
 import pandas as pd
+from pandas import DataFrame, Series
 import random
+import numpy as np
+import time
 
 #size and styling of the output graph
-from pylab import rcParams
-rcParams['figure.figsize'] = 15, 10
-plt.style.use('fivethirtyeight')
+# from pylab import rcParams
+# rcParams['figure.figsize'] = 15, 10
+# plt.style.use('fivethirtyeight')
 
-class Test(object):
+class TreeTester(object):
     def __init__(self, tree_dict=None):
         if not tree_dict:
             self.tree_dict = {'BST':BinarySearchTree(), 'SplayTree':SplayTree()}
@@ -79,18 +82,24 @@ class Test(object):
         plt.title("{}".format(names))
         plt.show()
 
-    def compareDepthAccessTimes(self, n = 100000):
-        '''Plot the time it takes to access an element by depth'''
+    def compareDepthAccessTimes(self, n = 1000):
+        '''
+        Plot the time it takes to access an element by depth
+        Returns: pandas dataframe
+                 columns: tree
+                 rows: time in microseconds
+        '''
 
         seq = self.insertRandomElements(n)
 
         k = max([tree.height() for tree in self.tree_dict.values()])
-        for name,tree in self.tree_dict.items():
+        tree_dict = {}
+        for name, tree in self.tree_dict.items():
             tree_series = []
-            print('timing access from depth 0 to depth {}'.format(k))
+            print('{}: timing access from depth 0 to depth {}'.format(name, k))
             for i in range(k):
                 total_time = 0
-                times_sampled = 10
+                times_sampled = 100
                 for j in range(times_sampled):
                     level = tree.getLevel(i)
                     if level:
@@ -103,13 +112,8 @@ class Test(object):
                     total_time += (t1-t0)
                 tree_series.append((total_time/times_sampled)*1000*1000)
 
-            tree_series = pd.Series(tree_series)
-            tree_series.plot(label=name)
-        plt.title("Access time by depth for trees of {}k items".format(n/1000))
-        plt.xlabel('depth')
-        plt.ylabel('microseconds')
-        plt.legend()
-        plt.show()
+            tree_dict[name] = tree_series
+        return DataFrame(tree_dict)
 
 '''
 #interesting attempt to print tree structure
