@@ -120,11 +120,11 @@ class Test(object):
 #than a regular BST
 '''
 
-functions = inspect.getmembers(Test, inspect.isfunction)
-classes = inspect.getmembers(sys.modules[__name__], inspect.isclass)
-print('Test class functions: ', ', '.join([f[0] for f in functions]))
-print('Classes: ', ', '.join([c[0] for c in classes]))
-print('Currently implemented: SplayTree, BinarySearchTree, AVLTree')
-
-test = Test({'AVLTree':AVLTree(), 'BST':BinarySearchTree(), 'SplayTree': SplayTree()})
-test.compareDepthAccessTimes()
+# functions = inspect.getmembers(Test, inspect.isfunction)
+# classes = inspect.getmembers(sys.modules[__name__], inspect.isclass)
+# print('Test class functions: ', ', '.join([f[0] for f in functions]))
+# print('Classes: ', ', '.join([c[0] for c in classes]))
+# print('Currently implemented: SplayTree, BinarySearchTree, AVLTree')
+#
+# test = Test({'AVLTree':AVLTree(), 'BST':BinarySearchTree(), 'SplayTree': SplayTree()})
+# test.compareDepthAccessTimes()
